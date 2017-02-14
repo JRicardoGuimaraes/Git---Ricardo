@@ -1,0 +1,172 @@
+#include "protheus.ch"
+
+User Function MsNCFin()
+
+Local cCadastro:= "Analisa e corrige duplicidade das tabelas do financeiro"
+
+Processa({|| u_MsNCFin2(.T.)},"MsNcFin",cCadastro)
+
+Return(.T.)
+
+Static User Function MsNCFin2()
+
+Local cChave   := ""
+Local cAbat    := ""
+Local nRecno   := 0
+Local aRecno   := {}
+Local aNCC     := {}
+Local aPrefixo := {"V8 ","811","V_8","P_8","P8 "}
+Local cNewPref := ""
+Local cChave   := ""
+Local nX       := 0
+Local nNext    := 0
+
+dbSelectArea("SE1")
+dbSetOrder(1)
+dbGotop()
+ProcRegua(LastRec())
+
+While !Eof()
+
+	cChave := SE1->E1_FILIAL+SE1->E1_PREFIXO+SE1->E1_NUM+SE1->E1_PARCELA+SE1->E1_TIPO
+	dbSelectArea("SE1")
+	dbSkip()
+	IncProc("Analisando: "+cChave)
+	
+	If (SE1->E1_TIPO == "NF " .Or. SE1->E1_TIPO == "NCC") .And. Empty(SE1->E1_FATURA)
+		While !Eof() .And. cChave == SE1->E1_FILIAL+SE1->E1_PREFIXO+SE1->E1_NUM+SE1->E1_PARCELA+SE1->E1_TIPO
+		
+			dbSelectArea("SE1")
+			dbSkip()
+			nNext  := SE1->(RecNo())
+			dbSkip(-1)			
+		
+			Begin Transaction
+			
+			cNewPref := Nil
+		 
+			ConOut("Corrigindo: "+SE1->E1_FILIAL+" "+" "+SE1->E1_PREFIXO+" "+SE1->E1_NUM+" "+SE1->E1_PARCELA+" "+SE1->E1_TIPO)
+			nRecno  := SE1->(RecNo())
+			For nX := 1 To Len(aPrefixo)
+				dbSelectArea("SE1")
+				dbSetOrder(1)
+				If !MsSeek(xFilial("SE1")+aPrefixo[nX]+SubStr(cChave,6))
+					cNewPref := aPrefixo[nX]
+					Exit
+				EndIf
+				If Len(aPrefixo) == nX
+					aadd(aPrefixo,Soma1(cNewPref))
+				EndIf
+			Next nX
+			SE1->(dbGoto(nRecno))
+			If cNewPref <> Nil
+				
+				cFilAnt := IIf(Empty(SE1->E1_FILIAL),cFilAnt,SE1->E1_FILIAL)
+
+				//Localizando titulos de abatimento		
+				cAbat := SE1->E1_FILIAL+SE1->E1_CLIENTE+SE1->E1_LOJA+SE1->E1_PREFIXO+SE1->E1_NUM+SE1->E1_PARCELA
+				aRecno := {}
+				dbSelectArea("SE1")
+				dbSetOrder(2)
+				MsSeek(SE1->E1_FILIAL+SE1->E1_CLIENTE+SE1->E1_LOJA+SE1->E1_PREFIXO+SE1->E1_NUM+SE1->E1_PARCELA)
+				While !Eof() .And. SE1->E1_FILIAL+SE1->E1_CLIENTE+SE1->E1_LOJA+SE1->E1_PREFIXO+SE1->E1_NUM+SE1->E1_PARCELA == cAbat
+					If SubStr(SE1->E1_TIPO,3,1)=="-"
+						ConOut("Corrigindo abatimento: "+SE1->E1_FILIAL+" "+" "+SE1->E1_PREFIXO+" "+SE1->E1_NUM+" "+SE1->E1_PARCELA+" "+SE1->E1_TIPO)
+						aadd(aRecno,SE1->(RecNo()))
+					EndIf
+					dbSelectArea("SE1")
+					dbSkip()
+				EndDo
+				For nX := 1 To Len(aRecno)
+					SE1->(MsGoto(aRecno[nX]))
+					RecLock("SE1")
+					SE1->E1_PREFIXO := cNewPref
+					MsUnLock()
+				Next nX
+				
+				SE1->(dbSetOrder(1))
+				SE1->(dbGoto(nRecno))
+				
+				//Localizando as baixas do titulo
+				dbSelectArea("SE5")
+				dbSetOrder(7)
+				MsSeek(xFilial("SE5")+SE1->E1_PREFIXO+SE1->E1_NUM+SE1->E1_PARCELA+SE1->E1_TIPO+SE1->E1_CLIENTE+SE1->E1_LOJA)
+				aRecno := {}
+				While !Eof() .And. xFilial("SE5") == SE5->E5_FILIAL .And.;
+					SE1->E1_PREFIXO == SE5->E5_PREFIXO .And.;
+					SE1->E1_NUM == SE5->E5_NUMERO .And.;
+					SE1->E1_PARCELA == SE5->E5_PARCELA .And.;
+					SE1->E1_TIPO == SE5->E5_TIPO .And.;
+					SE1->E1_CLIENTE == SE5->E5_CLIFOR .And.;
+					SE1->E1_LOJA == SE5->E5_LOJA 
+					
+					If !((SE5->E5_RECPAG=="R".AND.SE5->E5_TIPODOC=="ES").And.;
+						(SE5->E5_RECPAG=="P".AND.SE5->E5_TIPODOC<>"ES"))
+						If !(SE5->E5_TIPO $ MVRECANT+"/"+MV_CRNEG)
+							aadd(aRecno,SE5->(RecNo()))
+						Else
+							aadd(aNCC,SE5->(RecNo()))
+						EndIf
+					EndIf
+					
+					dbSelectArea("SE5")
+					dbSkip()
+				EndDo
+				For nX := 1 To Len(aRecno)
+					SE5->(MsGoto(aRecno[nX]))
+					RecLock("SE5")
+					SE5->E5_PREFIXO := cNewPref
+					MsUnLock()
+				Next nX
+				For nX := 1 To Len(aNCC)
+					SE5->(MsGoto(aNCC[nX]))
+					RecLock("SE5")
+					SE5->E5_PREFIXO := cNewPref
+					MsUnLock()
+					cChave := SubStr(SE5->E5_DOCUMEN,1,9+Len(SE1->E1_PARCELA)+3)+SE5->E5_CLIFOR+SubStr(SE5->E5_DOCUMEN,9+Len(SE1->E1_PARCELA)+3+1,Len(SE5->E5_LOJA))+SE5->E5_SEQ
+					dbSelectArea("SE5")
+					dbSetOrder(7)
+					MsSeek(xFilial("SE5")+cChave)
+					While !Eof() .And. xFilial("SE5") == SE5->E5_FILIAL .And.;
+						cChave == SE5->E5_PREFIXO+SE5->E5_NUMERO+SE5->E5_PARCELA+SE5->E5_TIPO+SE5->E5_CLIFOR+SE5->E5_LOJA+SE5->E5_SEQ
+						SE5->(dbSkip())
+						nRecNo := SE5->(Recno())
+						SE5->(dbSkip(-1))
+						RecLock("SE5")
+						SE5->E5_DOCUMEN := cNewPref+SubStr(SE5->E5_DOCUMEN,4)
+						MsUnLock()
+						SE5->(dbGoto(nRecNo))
+					EndDo					
+				Next nX
+				
+				RecLock("SE1")
+				SE1->E1_PREFIXO := cNewPref
+				MsUnLock()
+				
+				If "MATA460"$SE1->E1_ORIGEM
+					dbSelectArea("SF2")
+					dbSetOrder(1)
+					If MsSeek(xFilial("SF2")+SE1->E1_NUM+cNewPref+SE1->E1_CLIENTE+SE1->E1_LOJA)
+						RecLock("SF2")
+						SF2->F2_PREFIXO := cNewPref
+						MsUnLock()				
+					EndIf
+				ElseIf "MATA100"$SE1->E1_ORIGEM
+					dbSelectArea("SF1")
+					dbSetOrder(1)
+					If MsSeek(xFilial("SF1")+SE1->E1_NUM+cNewPref+SE1->E1_CLIENTE+SE1->E1_LOJA+"D")
+						RecLock("SF1")
+						SF1->F1_PREFIXO := cNewPref
+						MsUnLock()				
+					EndIf				
+				EndIf
+			EndIf
+			
+			End Transaction
+			dbSelectArea("SE1")
+			SE1->(dbGoto(nNext))
+		EndDo
+	EndIf	
+EndDo
+
+		

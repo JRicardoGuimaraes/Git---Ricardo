@@ -1,0 +1,30 @@
+Group tst
+   Version=7.0
+   VSSDB=
+   HasProperties=1
+   Properties
+      BeforeApply=
+      AfterApply=
+      Icon=
+      ID=
+      Version=
+      PalmName=
+      OutPut=
+   End
+   ProjectsCount=1
+   Project Novo Projeto
+      FoldersCount=2
+      Folder Fontes
+         VSSPath=Fontes
+         FilesCount=0
+      End
+      Folder Definições
+         VSSPath=Definições
+         FilesCount=1
+         File \RDMAKE\Compra-de-Frete-TLA\GEFM079.PRW
+             Type=T
+         End
+      End
+   End
+   BatchBuild_Item0=Novo Projeto · TESTE
+End

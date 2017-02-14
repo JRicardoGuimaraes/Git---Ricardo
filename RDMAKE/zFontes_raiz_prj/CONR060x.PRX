@@ -1,0 +1,1168 @@
+#Include "Xonr060.Ch"
+#Include "PROTHEUS.Ch"
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ Conr060  ³ Autor ³ Wagner Xavier         ³ Data ³ 26.11.92 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Emiss„o do Raz„o zebrado                                   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ Conr060(void)                                              ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico                                                   ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+User Function ConR060x( cContaInicial, cContaFinal, cDisco )
+Local WnRel
+Local cDesc1 := OemToAnsi(STR0001)  //"Este programa ir  imprimir o Raz„o Contabil, de  acordo  com"
+Local cDesc2 := OemToAnsi(STR0002)  //"os parƒmetros solicitados pelo usu rio. Caso seja  escolhida"
+Local cDesc3 := OemToAnsi(STR0003)  //"a impress„o do Centro de Custo, o relat¢rio ser  comprimido."
+Local cString:="SI2"
+Local titulo  :=OemToAnsi(STR0006) + GetMV("MV_MOEDA1")  //"Emissao do Razao em "
+Local Tamanho :="M"
+Private aReturn  := { OemToAnsi(STR0004), 1,OemToAnsi(STR0005), 2, 2, 1, "", 1 }  //"Zebrado"###"Administracao"
+Private nomeprog := ""
+Private aLinha   := {}
+Private nLastKey := 0
+Private cPerg    := ""
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define os par„metros do relat¢rio                            ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If ( cDisco == NIL )
+   Pergunte ( "COR060", .T. )
+   nomeprog := "CONR060"
+   cPerg    := "COR060"
+   wnRel    := "CONR060"
+Else
+   Pergunte ( "COC010", .T. )
+   nomeprog := "CONC010"
+   cPerg    := "COC010"
+   wnRel    := "CONC010"
+EndIF
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Envia controle para a funcao SETPRINT                        ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If cDisco != Nil		// Para consulta nao pode alterar perguntas
+	Tamanho	:= Iif(( mv_par07 == 1 ) .Or. ( Mv_Par03 == 1 ),"G",Tamanho)
+	wnrel := SetPrint(cString,wnrel,"",@titulo,cDesc1,cDesc2,cDesc3,.F.,"",,Tamanho)
+Else
+	Tamanho	:= If( (Mv_Par06==1 .And. mv_par10=1) .OR. (Mv_Par16==1 .And. mv_par10=1), "G", Tamanho)
+	wnrel := SetPrint(cString,wnrel,cPerg,@titulo,cDesc1,cDesc2,cDesc3,.F.,"",,Tamanho)
+EndIf	
+
+If nLastKey = 27 
+	Set Filter To
+   Return
+Endif
+
+// Bops 15667 - Recarregar variavel Tamanho de acordo com as perguntas
+// Caso tamanho for diferente de G utilizar tipo de impressao selecionada aReturn[4]
+
+If cDisco != Nil		// Para consulta nao pode alterar perguntas
+	Tamanho	:= Iif(( mv_par07 == 1 ) .Or. ( Mv_Par03 == 1 ),"G",Tamanho)
+Else
+	Tamanho	:= If( (Mv_Par06==1 .And. mv_par10=1) .OR. (Mv_Par16==1 .And. mv_par10=1), "G", Tamanho)
+EndIf	
+
+SetDefault(aReturn,cString,,,Tamanho,If(Tamanho="G",2,aReturn[4]))
+
+If nLastKey = 27
+	Set Filter To
+   Return
+Endif
+
+RptStatus({|lEnd| Cr060Imp(@lEnd,wnRel,cString,cContaInicial, cContaFinal, cDisco)})  // Chamada do Relatorio
+Return 
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³ Fun‡…o    ³ Cr060Imp ³ Autor ³ Wagner Xavier         ³ Data ³ 05/11/93 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Descri‡…o ³ Impressao do Razao                                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Sintaxe   ³ Cr060Imp(lEnd,wnRel,cString)                               ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso       ³ SIGACON                                                    ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros ³ lEnd    - A‡Æo do Codeblock                                ³±±
+±±³           ³ wnRel   - T¡tulo do relat¢rio                              ³±±
+±±³           ³ cString - Mensagem                                         ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Static Function Cr060Imp(lEnd,WnRel,cString,cContaInicial, cContaFinal, cDisco)
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define Variaveis                                             ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Local CbTxt
+Local cbcont
+Local tamanho:="M"
+Local limite := 132
+Local nQuebra:=0,aCampos
+Local nTotDeb:=0,nTotCrd:=0,cContAnt, nSaldoAtu:=0,aInicioMes,lImprAnt:=.F.
+Local dDataInicial   := CtoD ( Space ( 08 ) )
+Local dDataFinal     := CtoD ( Space ( 08 ) )
+Local lCentroDeCusto := .T.
+Local lImpCC			:=.F.,lSalto:=.F.,nSalto
+Local lImpItem			:= .F.
+Local nTamLinha := 132
+Local cInicio, cPer17, cPer17Ant
+Local lResumido   := .F.     // relatorio resumido (s¢ totais) ou completo
+Local nDebitoDia  := 0       // total de debitos do dia
+Local nCreditDia  := 0       // total de creditos do dia
+Local nSaldosDia  := 0       // saldo final do dia
+Local nPagInicial := 1       // numero da pagina inicial
+Local dDataLanc              // data de lancamento
+Local bSinal  		:= { | nSaldo | Iif( nSaldo < 0 , "D", Iif( nSaldo > 0 , "C"," " ) ) }
+Local lNaoDeb := lNaoCred := .F.
+Local lImp := .F.
+Local lEstrang
+Local lCusto
+Local lComplHist := .T.
+Local nCodNor	:= 1
+Local cItemInicial, cItemFinal
+Local cDigVer	:= GetMv("MV_DIGVER")
+Local nReinicia
+Local cDescricao  // descricao da conta
+Local cTituloR:=OemToAnsi(STR0008)  //"RAZAO  ANALITICO  (TOTAIS)  DE "
+Local cCabecR :=OemToAnsi(STR0009) //"DATA                                                                                   DEBITO          CREDITO          SALDO ATUAL"
+Local cTituloA:=OemToAnsi(STR0010)  //"RAZAO  ANALITICO  DE "
+Local Cabec1  :="", cabec2  := OemtoAnsi(STR0031)   //"DATA"
+Local cCabeca1		:= OemToAnsi(STR0011)
+Local aCompHist := {}, nX
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Resumido sem C.Custo e Sem Item da conta    - ntamlinha == 132³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+//"DATA                                                                                   DEBITO          CREDITO          SALDO ATUAL"
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Cabece‡alho sem C.Custo e Sem Item da Conta - ntamlinha == 132 - STR0011³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+//"NUMERO         H I S T O R I C O                        C/PARTIDA                      DEBITO          CREDITO          SALDO ATUAL"
+// XXXXXXXXXXXXXX xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx XXXXXXXXXXXXXXXXXXXX 9,999,999,999.99 9,999,999,999.99 9,999,999,999,999.99D
+// 01234^678901234^678901234^678901234^678901234^678901234^678901234^678901234^678901234^678901234^678901234^678901234^678901234^678901
+//           1         2         3         4         5         6         7         8         9        10        11        12        13 
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Cabe‡alho C/ CCusto e c/ Item Conta-ntamlinha==132 e vc-vs-str0011+str0030³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+//"NUMERO         H I S T O R I C O                        C/PARTIDA            C.CUSTO        ITEM                DEBITO               CREDITO              SALDO ATUAL"
+// XXXXXXXXXXXXXX XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXXXXXX CCCCCCCCC IIIIIIIII 99,999,999,999,999.99 99,999,999,999,999.99 9,999,999,999,999,999.99D
+//                                                                                                 "               DEBITO               CREDITO              SALDO ATUAL"
+// 01234^678901234^678901234^678901234^678901234^678901234^678901234^678901234^678901234^678901234^678901234^678901234^678901234^678901234^678901234^678901234^678901234
+//           1         2         3         4         5         6         7         8         9        10        11        12        13        14        15        16    
+Local cCabeca2		:= OemToAnsi(STR0012) //"  DEBITO      CREDITO   SALDO ATUAL"
+Local nTam := 130
+Local dDataAnte := Ctod("  /  /  ")
+Local nLcoControl	:= 0
+
+Private cMes17Ini, cMes17Fim
+Private cPeriodoInicial, cPeriodoAtual
+Private cSintAnt   //Vari vel auxiliar
+Private cContaSint //1a Conta sint‚tica Anterior
+Private cDesc      //Nome da 1a Conta Sint‚tica Anterior
+Private cContaAna := ""
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis utilizadas para Impressao do Cabecalho e Rodape    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+cbtxt    := SPACE(10)
+cbcont   := 0
+li       := 80
+m_pag    := 1
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Verifica as perguntas selecionadas                           ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If ( cDisco == NIL )
+   //ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+   //³ Variaveis utilizadas para parametros ( COR060 )              ³
+   //³ mv_par01            // da conta                              ³
+   //³ mv_par02            // ate a conta                           ³
+   //³ mv_par03            // da data                               ³
+   //³ mv_par04            // Ate a data                            ³
+   //³ mv_par05            // junta as contas c/mesmo centro custo  ³
+   //³ mv_par06            // verifica se imprime o Centro de Custo ³
+   //³ mv_par07            // Salto de pagina                       ³
+   //³ mv_par08            // Pagina Inicial                        ³
+   //³ mv_par09            // Pagina Final                          ³
+   //³ mv_par10            // Analitico ou Resumido dia (resumo)    ³
+   //³ mv_par11            // Imprime conta sem movimento?          ³
+   //³ mv_par12            // Descricao Nacional ou Estrangeira?    ³
+   //³ mv_par13            // Do Centro de Custo                    ³
+   //³ mv_par14            // At‚ o Centro de Custo                 ³
+   //³ mv_par15            // Imprime Cod (Normal / Reduzida)       ³
+	//³ mv_par16            // Imprime Item?	                       ³	
+   //³ mv_par17            // Do Item                               ³
+   //³ mv_par18            // Ate Item                              ³
+   //³ mv_par19            // Numero da Pag p/ Reiniciar            ³	
+   //ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+   cContaInicial  := Mv_Par01
+   cContaFinal    := Mv_Par02
+	cCustoInicial	:= mv_par13
+	cCustoFinal		:= mv_par14
+   dDataInicial   := Mv_Par03
+   dDataFinal     := Mv_Par04
+   lCentroDeCusto := ( Mv_Par05 == 1 )
+	Tamanho	  		:= "M"
+	lImpCC	  		:= (Mv_Par06==1 .And. mv_par10=1)
+	lImpItem  		:= (Mv_Par16==1 .And. mv_par10=1)
+	nTamLinha 		:= If((lImpItem .Or. lImpCC .And. mv_par10=1),220,nTamLinha)
+	nSalto	  		:= mv_par07
+	m_pag	  			:= mv_par08
+	m_paginicial	:= mv_par08
+	m_pagfim  		:= mv_par09	
+	lResumido 		:= If(mv_par10==2,.T.,.F.)
+	lImp				:= If(mv_par11==1,.t.,.f.)
+	nCodNor			:= mv_par15
+	cItemInicial   := mv_par17
+	cItemFinal     := mv_par18
+	nReinicia		:= mv_par19
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Verifica se descricao em outra lingua      	 ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	lEstrang := .F.
+	dbSelectArea("SX3")
+	dbSetOrder(2)
+	dbSeek("I1_DESCEST")
+	If X3USO(X3_USADO)
+		If mv_par12 == 2
+			lEstrang := .T.
+		EndIf
+	EndIf		
+	lCusto := .F.
+	dbSeek("I2_CCD")
+	If X3USO(X3_USADO)
+		dbSeek("I2_CCC")
+		If X3USO(X3_USADO)
+			lCusto := .T.
+		EndIf
+	EndIf
+	dbSelectArea("SI1")
+	dbSetOrder(1)
+Else
+   //ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+   //³ Variaveis utilizadas para parametros ( COC010 )              ³
+   //³ mv_par01            // do dia                                ³
+   //³ mv_par02            // Ate o dia                             ³
+   //³ mv_par03            // Considera os Centro de Custo          ³
+   //³ mv_par04            // Pagina Inicial			    				  ³	
+   //³ mv_par05            // Pagina Final		            		  ³
+   //³ mv_par06            // Descricao Nacional ou Estrangeira	  ³
+   //³ mv_par07            // Considera os Items               	  ³
+   //ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+   dDataInicial  	:= Mv_Par01
+   dDataFinal    	:= Mv_Par02
+	cCustoInicial 	:= Space(9)
+	cCustoFinal		:= Replicate("Z",9)
+   lImpCC			:= ( Mv_Par03 == 1 )
+	lImpItem			:= ( mv_par07 == 1 )
+	Tamanho			:= "M"
+	nTamLinha 		:= If((lImpItem .Or. lImpCC),220,nTamLinha)	
+   m_pag  		  	:= mv_par04
+	m_paginicial   := mv_par04	
+   m_pagfim		  	:= mv_par05
+   nSalto		  	:= 2   	// Nao Salta Pagina	
+	lImp			  	:= .t.
+	nCodNor		  	:= 1
+	cItemInicial	:= Space(09)
+	cItemFinal		:= Replicate("Z",9)
+	nReinicia		:= mv_par04
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Verifica se descricao em outra lingua      	 ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	lEstrang := .F.
+	dbSelectArea("SX3")
+	dbSetOrder(2)
+	dbSeek("I1_DESCEST")
+	If X3USO(X3_USADO)
+		If mv_par06 == 2
+			lEstrang := .T.
+		EndIf
+	EndIf
+	dbSelectArea("SI1")
+	dbSetOrder(1)
+Endif
+nPagInicial       := m_pag
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Verifica se datas informadas estao corretas	                 ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If ! DataMoeda(1, @cMes17Ini, dDataInicial)
+	Help(" ",1,"MESINVALID")
+	Return
+End
+If ! DataMoeda(1, @cMes17Fim, dDataFinal)
+	Help(" ",1,"MESINVALID")
+	Return
+End		
+
+aInicioMes := CalcData(dDataInicial,1)
+If aInicioMes[2] >= dDataInicial	
+	aInicioMes[2] := dDataInicial
+End
+
+// STR0030 "               DEBITO               CREDITO              SALDO ATUAL"
+// STR0012 "          DEBITO         CREDITO     SALDO ATUAL"
+
+cCabeca2 := Iif(lImpItem .Or. lImpCC,OemToAnsi(STR0030),cCabeca2)
+
+dataMoeda(1, @cPeriodoInicial, aInicioMes[2])
+
+If lImpCC .And. lImpItem
+	cCabecA := 	cCabeca1+Space(1)+Upper(RetTitle("I3_CUSTO",09))+Space(1)+;
+					Upper(RetTitle("I4_ITEM",09))+Space(1)+cCabeca2
+ElseIf lImpCC .And. !lImpItem
+	cCabecA := 	cCabeca1+Space(1)+Upper(RetTitle("I3_CUSTO",09))+Space(10)+;
+					cCabeca2
+ElseIf !lImpCC .And. lImpItem
+	cCabecA := 	cCabeca1+Space(10)+Upper(RetTitle("I4_ITEM",09))+Space(1)+;
+				cCabeca2
+ElseIf !lImpCC .And. !lImpItem
+	cCabecA := 	cCabeca1+Space(1)+cCabeca2
+Endif
+
+If lResumido
+	titulo:=cTituloR + GetMv("MV_MOEDA1") + OemToAnsi(STR0014)
+	cabec2:=cCabecR
+Else
+	titulo:=cTituloA + GetMv("MV_MOEDA1") + OemToAnsi(STR0014)
+	cabec1:=cCabecA
+Endif
+titulo+=	Dtoc(dDataInicial) + OemToAnsi(STR0015) + Dtoc(dDataFinal)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Cria Arquivo de Trabalho                                ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+aCampos:={ {"CONTA  ","C",20,0},;
+			  {"CPAR   ","C",20,0},;
+			  {"DC     ","C", 1,0},;
+			  {"VALOR"  ,"N",16,2},;
+			  {"DATAX"  ,"D",08,0},;
+			  {"NUMERO" ,"C",10,0},;
+			  {"LINHA"  ,"C",02,0},;
+			  {"PERIODO","C",04,0},;
+			  {"CCUSTO" ,"C",09,0},;
+			  {"ITEM" 	,"C",09,0},;
+			  {"HISTOR" ,"C",40,0},;
+			  {"FILORIG","C",02,0},;
+			  {"EMPORIG","C",02,0} }
+If ( Select ( "cNomeArq" ) <> 0 )
+	dbSelectArea ( "cNomeArq" )
+	dbCloseArea ()
+End
+cNomeArq:=CriaTrab(aCampos)
+dbUseArea( .T.,, cNomeArq, "cNomeArq", NIL, .F. )
+IndRegua("cNomeArq",cNomeArq,"CONTA+DTOS(DATAX)+NUMERO+LINHA+CCUSTO+EMPORIG+FILORIG",,,OemToAnsi(STR0028))  //"Selecionando Registros..."
+dbSelectArea("SI1")
+dbSetOrder(1)
+dbSeek ( cFilial + Alltrim ( cContaInicial ), .T. )
+SetRegua(Reccount())
+
+While !Eof() .and. cFilial = I1_FILIAL .and. I1_CODIGO <= cContaFinal
+
+   IncRegua()
+
+   IF I1_CLASSE = "S"
+      dbSkip()
+      Loop
+   EndIF
+
+   // ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+   // ³ Obt‚m os d‚bitos ³
+   // ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	dbSelectArea ( "SI2" )
+   SI2->( dbSetOrder ( 4 ) )
+	lNaoDeb := .T.
+   SI2->(dbSeek ( cFilial + SI1 -> I1_CODIGO + DTOS(aInicioMes[1]),.t.))
+	While !Eof() .and. cFilial = I2_FILIAL;
+		 .and. I2_DEBITO == SI1->I1_CODIGO .And. I2_DATA <= dDataFinal
+
+		IF Substr(I2_MOEDAS,1,1) != "S" .or. I2_VALOR==0
+			dbSkip()
+			Loop
+		EndIF
+
+		IF I2_DC $ "C-"
+			dbSkip()
+			Loop
+		EndIF
+			
+		If I2_CCD < cCustoInicial .Or. I2_CCD > cCustoFinal
+			dbSkip()
+			Loop
+		EndIf	
+
+		If I2_ITEMD < cItemInicial .Or. I2_ITEMD > cItemFinal
+			dbSkip()
+			Loop
+		Endif
+
+		cr060Temp("D",lCentroDeCusto,SI2->I2_VALOR)
+		lNaoDeb := .F.
+		dbSelectArea("SI2")
+		dbSetOrder(4)
+		dbSkip()
+	Enddo
+	
+   // ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+   // ³ Obt‚m os Cr‚ditos³
+   // ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	dbSelectArea ( "SI2" )
+   SI2 -> ( dbSetOrder ( 5 ) )
+	lNaoCred := .T.	
+	SI2 -> ( dbSeek ( cFilial + SI1 -> I1_CODIGO + DTOS(aInicioMes[1]),.t.) )
+	While !Eof() .and. cFilial = I2_FILIAL ;
+		.and. I2_CREDITO == SI1->I1_CODIGO .And. I2_DATA <= dDataFinal
+			
+		IF Substr(I2_MOEDAS,1,1) != "S" .or. I2_VALOR==0
+			dbSkip()
+			Loop
+		EndIF
+	
+		IF I2_DC $ "D-"
+			dbSkip()
+			Loop
+		EndIF
+
+		If I2_CCC < cCustoInicial .Or. I2_CCC > cCustoFinal
+			dbSkip()
+			Loop
+		EndIf	
+
+		If I2_ITEMC < cItemInicial .Or. I2_ITEMC > cItemFinal
+			dbSkip()
+			Loop
+		EndIf
+
+		cr060Temp("C",lCentrodeCusto,SI2->I2_VALOR)
+			
+		lNaoCred := .F.
+		dbSelectArea("SI2")
+		dbSetOrder(5)
+		dbSkip()
+	Enddo
+	
+	If lNaoDeb .And. lNaoCred .And. !lResumido
+		cr060NoMov(1,lImp)
+	EndIf	
+
+   dbSelectArea("SI1")
+	dbSetOrder(1)
+   dbSkip()
+
+EndDo
+
+dbSelectArea("cNomeArq")
+dbGoTop()
+
+SetRegua(Reccount())
+
+dDataLanc := cNomeArq->DATAX
+While ( cNomeArq -> ( ! Eof () ) )
+
+	IF lEnd
+		@Prow()+1,0 PSAY OemToAnsi(STR0007)  //"***** CANCELADO PELO OPERADOR *****"
+		Exit
+	EndIF
+
+	IncRegua()
+
+	IF (CONTA < cContaInicial .or. CONTA > cContaFinal)
+		dDataLanc := cNomeArq->DATAX
+		dbSkip()
+		Loop
+	EndIF
+
+   Cr060Cabec(Titulo, Tamanho, Cabec1, Cabec2, nQuebra, @lSalto, nPagInicial,;
+              lImpItem, lImpCC, cContAnt, nSaldoAtu, lEstrang, bSinal,;
+              nReinicia, dDataFinal, cDigVer, nCodNor, @nSaldosDia,@dDataAnte,lResumido)
+              
+	IF nQuebra == 0
+		dbSelectArea("cNomeArq")
+		nQuebra:=1
+		lImprAnt:=.F.
+		cContAnt:=CONTA
+		dbSelectArea("SI1")
+		dbSetOrder(1)
+		dbSeek(cFilial+cContAnt)
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Calcula o Saldo anterior ao periodo impresso                 ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		nSaldoAtu := CalcSaldo(Val(cMes17Ini)-1,1)
+		nTotDeb:=0
+		nTotCrd:=0
+		dbSelectArea("cNomeArq")
+	EndIF
+     
+	IF CONTA != cContAnt
+		nQuebra 	:= 0
+		IF lImprAnt
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Imprime totais do dia, para opcao de s¢ totais.              ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			If lResumido
+				If dDataLanc >= dDataInicial
+					@ li,000 PSAY dDataLanc
+					If !lImpItem .And. !lImpCC
+						@ li, 77 PSAY nDebitoDia  Picture tm(nDebitoDia,16,,lEstrang)
+						@ li,094 PSAY nCreditDia  Picture tm(nCreditDia,16,,lEstrang)
+						@ li,111 PSAY Abs(nSaldosDia) Picture tm(Abs(nSaldosDia),20,,lEstrang)
+						@ li,131 PSAY Eval ( bSinal , nSaldosDia )
+					Else
+						ValorContab(nDebitoDia,li,97,21,,.F.,lEstrang)
+						ValorContab(nCreditDia,li,119,21,,.F.,lEstrang)
+						ValorContab(nSaldosDia,li,141,24,,.T.,lEstrang)
+					EndIf
+					nDebitoDia := nCreditDia := 0
+					dDataLanc := cNomeArq->DATAX
+					li ++
+				EndIf
+			EndIf	
+    	
+			li++
+			@li, 30 PSAY OemToAnsi(STR0020)  //"T o t a i s  d a  C o n t a  ==> " 
+			If !lImpItem .And. !lImpCC
+				@li,077 PSAY nTotDeb     Picture tm(nTotDeb,16,,lEstrang)
+				@li,094 PSAY nTotCrd     Picture tm(nTotCrd,16,,lEstrang)
+				@li,111 PSAY Abs(nSaldoAtu) Picture tm(Abs(nSaldoAtu),20,,lEstrang)
+				@li,131 PSAY Eval ( bSinal , nSaldoAtu )
+			Else
+				ValorContab(nTotDeb,li,97,21,,.F.,lEstrang)
+				ValorContab(nTotCrd,li,119,21,,.F.,lEstrang)
+				ValorContab(nSaldoAtu,li,141,24,,.T.,lEstrang)
+			EndIf	
+			li++
+			@li,00 PSAY Replicate("-",nTamLinha)
+			li++
+		EndIf
+		If nSalto == 1
+			lSalto := .T.
+		Endif
+		Loop
+	EndIf
+	dbSelectArea("cNomeArq")
+	IF (DATAX >= dDataInicial .and. DATAX <= dDataFinal) .Or. Empty(DATAX)
+		IF !lImprAnt
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Imprime a 1a Conta Sint‚tica Anterior quando for anal¡tica   ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			cContaSint := Cr060Sint(lEstrang)   //Retorna a 1a Conta Sint‚tica Anterior
+			If cContaSint != cSintAnt .and. !lResumido
+				@li++, 001 Psay mascara(cContaSint) +"-"+ cDesc
+				li++
+				cSintAnt := cContaSint
+			Endif
+			cDescricao := if(lEstrang,Substr(SI1->I1_DESCEST,1,60),Substr(SI1->I1_DESC,1,60))			
+			If cDigVer == "S"
+				@li,011 PSAY OemToAnsi(STR0017) +;  //"CONTA - "
+				Iif(nCodNor=1.Or.Empty(SI1->I1_RES),;
+				mascara(Alltrim(SI1->I1_CODIGO)+SI1->I1_DC),SI1->I1_RES)+"-"+;
+				cDescricao
+			Else
+				@li,011 PSAY OemToAnsi(STR0017) +;  //"CONTA - "
+				Iif(nCodNor=1.Or.Empty(SI1->I1_RES),mascara(SI1->I1_CODIGO),SI1->I1_RES)+"-"+;
+				cDescricao
+			EndIf	
+			If !lImpItem .And. !lImpcc
+				@li,093 PSAY OemToAnsi(STR0019)  		//"SALDO ANTERIOR : "
+			Else
+				@li,109 PSAY OemToAnsi(STR0019)  		//"SALDO ANTERIOR : "
+			EndIf		
+			If !lImpItem .And. !lImpCC
+				@li,111 PSAY Abs(nSaldoAtu)   Picture tm(Abs(nSaldoAtu),20,,lEstrang)
+				@li,131 PSAY Eval ( bSinal , nSaldoAtu )
+			Else
+				ValorContab(nSaldoAtu,li,141,24,,.T.,lEstrang)
+			EndIf	
+			li++
+			If lResumido
+				li ++
+			Endif
+			lImprAnt:=.T.
+			nSaldosDia := nSaldoAtu
+		EndIF
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Imprime totais do dia, para opcao de s¢ totais.              ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If lResumido
+			If dDataLanc >= dDataInicial .And. dDataLanc != cNomeArq->DATAX .And. ;
+				cNomeArq->CONTA == cContAnt
+				@ li,000 PSAY dDataLanc
+				If !lImpItem .And. !lImpCC
+					@ li,077 PSAY nDebitoDia  Picture tm(nDebitoDia,16,,lEstrang)
+					@ li,094 PSAY nCreditDia  Picture tm(nCreditDia,16,,lEstrang)
+					@ li,111 PSAY Abs(nSaldosDia) Picture tm(Abs(nSaldosDia),20,,lEstrang)
+					@ li,131 PSAY Eval ( bSinal , nSaldosDia )
+				Else
+					ValorContab(nDebitoDia,li,097,21,,.F.,lEstrang)
+					ValorContab(nCreditDia,li,119,21,,.F.,lEstrang)
+					ValorContab(nSaldosDia,li,141,24,,.T.,lEstrang)
+				EndIf
+				li ++
+				nDebitoDia := nCreditDia := 0
+			EndIf
+			
+			Cr060Cabec(Titulo, Tamanho, Cabec1, Cabec2, nQuebra, @lSalto, nPagInicial,;
+            lImpItem, lImpCC, cContAnt, nSaldoAtu, lEstrang, bSinal,;
+            nReinicia, dDataFinal, cDigVer, nCodNor, @nSaldosDia,@dDataAnte,lResumido)
+
+			IF DC == "D"
+				nSaldosDia -= cNomeArq -> VALOR
+				nDebitoDia += cNomeArq -> VALOR
+				nSaldoAtu-=VALOR
+				nTotDeb  +=VALOR
+			Else
+				nSaldosDia += cNomeArq -> VALOR
+				nCreditDia += cNomeArq -> VALOR
+				nSaldoAtu+=VALOR
+				nTotCrd  +=VALOR
+			EndIF
+			
+		Else    //IMPRIME TUDO
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	        //³ Conta os historicos complementares para imprimi-los          ³
+			//³ junto ao historico, na mesma pagina, para que os historicos  ³
+			//³ nao fiquem separados dos complementos de historico           ³
+         	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			aCompHist := {}
+			dbSelectArea("SI2")
+			dbSetOrder(3)
+			IF ( dbSeek(cFilial+Dtos(cNomeArq->DATAX)+cNomeArq->NUMERO+cNomeArq->LINHA+cNomeArq->EMPORIG+cNomeArq->FILORIG,.T.) )
+				dbSkip()
+				lComplHist := .T.
+				While ( !Eof() .And. ;
+					SI2->I2_DATA == cNomeArq->DATAX      .And.;
+					SI2->I2_NUM  == cNomeArq->NUMERO     .And.;
+					lComplHist )
+					If ( I2_EMPORIG  == cNomeArq -> EMPORIG .And.;
+						I2_FILORIG  == cNomeArq -> FILORIG )
+						If ( SI2->I2_DC == "-" )
+							Aadd(aCompHist, Substr(I2_NUM,1,4)+"/"+Substr(I2_NUM,5,6)+"-"+I2_LINHA+;
+												 " " + I2_HIST)
+						Else
+							lComplHist := .F.
+						EndIf
+					EndIf
+					dbSelectArea("SI2")
+					dbSkip()
+				Enddo
+			Endif		
+			dbSelectArea("cNomeArq")
+			// Se o historico atual mais os historicos complementares nao couber
+			// na mesma pagina, inicia nova pagina
+			If li+Len(aCompHist) > 56
+				Cr060Cabec(Titulo, Tamanho, Cabec1, Cabec2, nQuebra, .T., nPagInicial,;
+            			  	lImpItem, lImpCC, cContAnt, nSaldoAtu, lEstrang, bSinal,;
+            			  	nReinicia, dDataFinal, cDigVer, nCodNor, @nSaldosDia,;
+            			  	@dDataAnte,lResumido)
+			Endif
+			If ! Empty(DATAX)
+				If DATAX # dDataAnte .Or. CONTA # cContaAna
+					@li ++,000 PSAY DATAX
+				Endif
+				@li,000 PSAY SUBSTR(NUMERO,1,4)+"/"+Substr(NUMERO,5,6)+"-"+LINHA
+			Else
+				li ++
+			Endif
+			@li,015 PSAY HISTOR
+         //ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+         //³ Tratamento para historico complementar                       ³
+         //ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			For nX := 1 To Len(aCompHist)
+			   li++                      
+			   Cr060Cabec(	Titulo, Tamanho, Cabec1, Cabec2, nQuebra, @lSalto,;
+				 			nPagInicial, lImpItem, lImpCC, cContAnt, nSaldoAtu,;
+						    lEstrang, bSinal, nReinicia, dDataFinal, cDigVer,;
+						    nCodNor, @nSaldosDia, @dDataAnte,lResumido)
+				@li,000 PSAY aCompHist[nX]
+			Next
+			If cPaisLoc <>"CHI"
+				IF !Empty(CPAR)
+					If nCodNor = 1 .Or. (	SI1->(MsSeek(xFilial("SI1") + ("cNomeArq")->(CPAR))),;
+											Empty(SI1->I1_RES))
+						@li,56 PSAY TRIM(CPAR)		// Bops 10647
+					Else
+						@li,56 PSAY TRIM(SI1->I1_RES)
+					Endif
+					
+// Reposiciono o SI1 somente se for por codigo reduzido e tiver impresso a contra partida
+// Correcao na descricao que eh impressa baseada no posicionamento do SI1
+// e Caso for impresso por reduzido na quebra de pagina a descricao era impressa incorreta
+					
+					If nCodNor = 2 .And. SI1->I1_CODIGO <> ("cNomeArq")->(CONTA) 
+						SI1->(MsSeek(xFilial("SI1") + ("cNomeArq")->(CONTA)))
+					Endif
+				EndIF
+	         Endif
+			IF lImpCC
+				@li,077 PSAY CCUSTO
+			Endif
+
+			If lImpItem
+				@ li,087 Psay ITEM
+			EndIf
+
+			IF DC == "D"
+				If !lImpItem .And. !lImpCC
+					@li,077 PSAY VALOR    Picture  tm(VALOR,16,,lEstrang)
+				Else
+					ValorContab(VALOR,li,097,21,,.F.,lEstrang)
+				EndIf	
+				nSaldoAtu-=VALOR
+				nTotDeb  +=VALOR
+			Else
+				If !lImpItem .And. !lImpCC
+					@li,94 PSAY VALOR    Picture tm(VALOR,16,,lEstrang)
+				Else
+					ValorContab(VALOR,li,119,21,,.F.,lEstrang)
+				EndIf	
+				nSaldoAtu+=VALOR
+				nTotCrd  +=VALOR
+			EndIF
+			If !lImpItem .And. !lImpCC
+				@li,111 PSAY Abs(nSaldoAtu)  Picture tm(Abs(nSaldoAtu),20,,lEstrang)
+				@li,131 PSAY Eval ( bSinal , nSaldoAtu )
+			Else
+				ValorContab(nSaldoAtu,li,141,24,,.T.,lEstrang)
+			EndIf
+			li ++
+		EndIf
+	Else
+		IF DC == "D"
+			nSaldoAtu-=IIF(DATAX<dDataInicial,VALOR,0)		// Teste para garantia
+		Else
+			nSaldoAtu+=IIF(DATAX<dDataFinal,VALOR,0)
+		EndIF
+	EndIf	
+	dDataLanc 	:= cNomeArq->DATAX
+	dDataAnte 	:= dDataLanc
+	cContaAna	:= cNomeArq->CONTA
+	dbSkip( )
+
+// Caso a conta atual seja diferente da ultima analitica e nao tenha impresso texto "saldo anterior"
+// Ou nao tenho impresso texto "saldo anterior"
+// e a data esteja dentro da data inicial ou data em branco ou conta diferente
+
+	IF 	((CONTA != cContaAna .And. ! Empty(CONTA) .And. ! lImprAnt) .Or.;
+		  ! lImprAnt) .And.;
+		((DATAX >= dDataInicial .and. DATAX <= dDataFinal) .Or.;
+		 (Empty(DATAX)) .Or. (CONTA != cContaAna))
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Imprime a 1a Conta Sint‚tica Anterior quando for anal¡tica   ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		cContaSint := Cr060Sint(lEstrang,cContaAna)   //Retorna a 1a Conta Sint‚tica Anterior
+		If cContaSint != cSintAnt .and. !lResumido
+			@li++, 001 Psay mascara(cContaSint) +"-"+ cDesc
+			li++
+			cSintAnt := cContaSint
+		Endif
+		cDescricao := if(lEstrang,Substr(SI1->I1_DESCEST,1,60),Substr(SI1->I1_DESC,1,60))			
+		If cDigVer == "S"
+			@li,011 PSAY OemToAnsi(STR0017) +;  //"CONTA - "
+			Iif(nCodNor=1.Or.Empty(SI1->I1_RES),;
+			mascara(Alltrim(SI1->I1_CODIGO)+SI1->I1_DC),SI1->I1_RES)+"-"+;
+			cDescricao
+		Else
+			@li,011 PSAY OemToAnsi(STR0017) +;  //"CONTA - "
+			Iif(nCodNor=1.Or.Empty(SI1->I1_RES),mascara(SI1->I1_CODIGO),SI1->I1_RES)+"-"+;
+			cDescricao
+		EndIf	
+		If !lImpItem .And. !lImpcc
+			@li,093 PSAY OemToAnsi(STR0019)  		//"SALDO ANTERIOR : "
+		Else
+			@li,109 PSAY OemToAnsi(STR0019)  		//"SALDO ANTERIOR : "
+		EndIf		
+		If !lImpItem .And. !lImpCC
+			@li,111 PSAY Abs(nSaldoAtu)   Picture tm(Abs(nSaldoAtu),20,,lEstrang)
+			@li,131 PSAY Eval ( bSinal , nSaldoAtu )
+		Else
+			ValorContab(nSaldoAtu,li,141,24,,.T.,lEstrang)
+		EndIf	
+		li++
+		lImprAnt:=.T.
+		nSaldosDia := nSaldoAtu
+	Endif
+		
+Enddo
+
+// For impressao resumida por dia ou a ultima conta ter totais a debito/credito
+
+IF lResumido .Or. (li <> 80 .And. lImprAnt .And. !lEnd)
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Imprime totais do dia, para opcao de s¢ totais.              ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+// Linha + 4 eh o numero de linhas necessario para totalizacao
+// Caso seja maior do que o limite da folha forco o cabecalho
+
+	lDesCta := .F.
+	If li + 4 > 56
+		li := 80
+		lDesCta := .T.
+	   	Cr060Cabec(	Titulo, Tamanho, Cabec1, Cabec2, nQuebra, @lSalto,;
+   		 		   	nPagInicial, lImpItem, lImpCC, cContAnt, nSaldoAtu,;
+   	  			   	lEstrang, bSinal, nReinicia, dDataFinal, cDigVer,;
+   				  	nCodNor, @nSaldosDia, @dDataAnte,lResumido)
+	Endif
+
+	If lResumido
+		If dDataLanc >= dDataInicial
+			@ li,000 PSAY dDataLanc
+			If !lImpItem .And. !lImpCC
+				@ li,077 PSAY nDebitoDia      Picture tm(nDebitoDia,16,,lEstrang)
+				@ li,094 PSAY nCreditDia      Picture tm(nCreditDia,16,,lEstrang)
+				@ li,111 PSAY Abs(nSaldosDia) Picture tm(Abs(nSaldosDia),20,,lEstrang)
+				@ li,131 PSAY Eval ( bSinal , nSaldosDia )
+			Else
+				ValorContab(nDebitoDia,li,097,21,,.F.,lEstrang)
+				ValorContab(nCreditDia,li,119,21,,.F.,lEstrang)
+				ValorContab(nSaldosDia,li,141,24,,.T.,lEstrang)
+			EndIf	
+		EndIf	
+		li +=2 
+	ElseIf lDesCta
+		cDescricao := if(lEstrang,Substr(SI1->I1_DESCEST,1,60),Substr(SI1->I1_DESC,1,60))			
+		If cDigVer == "S"
+			@li,011 PSAY OemToAnsi(STR0017) +;  //"CONTA - "
+			Iif(nCodNor=1.Or.Empty(SI1->I1_RES),;
+			mascara(Alltrim(SI1->I1_CODIGO)+SI1->I1_DC),SI1->I1_RES)+"-"+;
+			cDescricao
+		Else
+			@li,011 PSAY OemToAnsi(STR0017) +;  //"CONTA - "
+			Iif(nCodNor=1.Or.Empty(SI1->I1_RES),mascara(SI1->I1_CODIGO),SI1->I1_RES)+"-"+;
+			cDescricao
+		EndIf
+		li += 2
+	Else
+		li ++		
+	EndIf
+
+	@li, 30 PSAY OemToAnsi(STR0020)  //"T o t a i s  d a  C o n t a  ==> " 
+	If !lImpItem .And. !lImpCC
+		@li,077 PSAY nTotDeb        Picture tm(nTotDeb,16,,lEstrang)
+		@li,094 PSAY nTotCrd        Picture tm(nTotCrd,16,,lEstrang)
+		@li,111 PSAY Abs(nSaldoAtu) Picture tm(Abs(nSaldoAtu),20,,lEstrang)
+		@li,131 PSAY Eval ( bSinal , nSaldoAtu )
+	Else
+		ValorContab(nTotDeb,li,097,21,,.F.,lEstrang)
+		ValorContab(nTotCrd,li,119,21,,.F.,lEstrang)
+		ValorContab(nSaldoAtu,li,141,24,,.T.,lEstrang)
+	EndIf	
+	li++
+	@li,00 PSAY Repl("-",nTamLinha)
+	Li++
+	Roda(cbcont,cbtxt,Iif(lImpItem .Or. lImpCC,"G",tamanho))
+EndIF
+
+If Li != 80 .Or. Select ( "cNomeArq" ) <> 0
+	dbSelectArea("cNomeArq")
+	Use
+	Ferase(cNomeArq+GetDBExtension())    	// Elimina arquivos de Trabalho
+   Ferase(cNomeArq+OrdBagExt())	// Elimina arquivos de Trabalho
+End
+
+dbSelectarea("SI1")
+dbSetOrder(1)
+Set Filter To
+dbSelectarea("SI2")
+dbSetOrder(1)
+
+If aReturn[5] = 1
+	Set Printer TO
+	dbCommitAll()
+	ourspool(wnrel)
+Endif
+
+MS_FLUSH()
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ Cr060Temp³ Autor ³ Wagner Xavier         ³ Data ³ 26.11.92 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Cria registro para arquivo tempor rio para emiss„o do      ³±±
+±±³          ³ Raz„o                                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ Cr060Temp ( cDC, lCentroDeCusto )                          ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ cDC ú Tipo de lan‡amento ( D‚bito, Cr‚dito ou X )          ³±±
+±±³          ³ lCentroDeCusto ú Inclui centros de custo ( .T. ou .F. )    ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ CONR060                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Static Function cr060Temp ( cDC, lCentroDeCusto , nValor)
+
+Local cFlag, cConta, cCpar, cContaRepl, cCustoRepl, cItemRepl
+
+nValor:=Iif(nValor==NIL,SI2->I2_VALOR,nValor)
+dbSelectArea ( "cNomeArq" )
+// ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+// ³ Caso o lan‡amento seja "X", define se ‚ cr‚dito ou d‚bito ³
+// ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+//cDc := iIf ( SI2 -> I2_CREDITO == SI1 -> I1_CODIGO, "C", "D" )
+Do Case
+   Case ( cDc == "C" )
+      cFlag := "C"
+		cConta:= "SI2 -> I2_CREDITO"
+		cCpar := "SI2 -> I2_DEBITO"
+   Case ( cDc == "D" )
+      cFlag := "D"
+		cConta:= "SI2 -> I2_DEBITO"
+		cCpar := "SI2 -> I2_CREDITO"
+EndCase
+
+// ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+// ³ Verifica se ha registro repetido no arquivo temporario    ³
+// ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+IF lCentroDeCusto .And. cr060Join ( &cConta )
+   cContaRepl := 	LEFT(&cConta,LEN(TRIM(&cConta))-SI1->I1_NCUSTO) + ;
+						Space(20-Len(LEFT(&cConta,LEN(TRIM(&cConta))-SI1->I1_NCUSTO)))
+Else
+	cContaRepl := &cConta
+EndIF
+// ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+// ³ Verifico o I1_NCUSTO se for cCentro de Custo Contabil     ³
+// ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If SI1->I1_NCUSTO != 0
+	cCustoRepl := Subs(&cConta,Len(Trim(&cConta))+1-SI1->I1_NCUSTO,SI1->I1_NCUSTO)
+Else
+	cCustoRepl := Iif(cDC=="D",SI2->I2_CCD,SI2->I2_CCC)
+Endif
+cItemRepl	:= Iif(cDC=="D",SI2->I2_ITEMD,SI2->I2_ITEMC)
+
+// Deve permitir imprimir registros repetidos, pois no caso de consolidacoes
+// poderao existir lancamentos iguais!
+
+Reclock("cNomeArq",.T.)
+Replace DC     With cFlag
+Replace HISTOR WITH SI2->I2_HIST
+Replace NUMERO With SI2->I2_NUM
+IF lCentroDeCusto .And. cr060Join ( &cConta )
+	Replace CONTA WITH LEFT(&cConta,LEN(TRIM(&cConta))-SI1->I1_NCUSTO)
+Else
+	Replace CONTA With &cConta
+EndIF
+Replace CPAR    With &cCpar
+Replace LINHA   With SI2->I2_LINHA
+Replace VALOR   With nValor
+Replace DATAX   With SI2->I2_DATA
+Replace PERIODO With SI2->I2_PERIODO
+Replace CCUSTO  With cCustoRepl
+Replace ITEM	 With cItemRepl
+Replace FILORIG With SI2->I2_FILORIG
+Replace EMPORIG With SI2->I2_EMPORIG
+
+MsUnlock()
+Return ( "" )
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ Cr060Join³ Autor ³ Wagner Xavier         ³ Data ³ 26.11.92 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Verifica se a conta sera agrupada por centro de custo      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ Cr060Join(ExpC1)                                           ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ tipo do lancamento                                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ CONR060                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Static Function cr060join(cCodigo)
+
+Local lRetorno  := .T.
+Local nRegistro := 0
+Local cArea     := ALias ()
+
+dbSelectArea ( "SI1" )
+nRegistro := SI1 -> ( Recno () )
+SI1 -> ( dbSeek ( cFilial + cCodigo ) )
+lRetorno := ( SI1 -> I1_NCUSTO != 0 )
+SI1 -> ( dbGoto ( nRegistro ) )
+
+dbSelectArea ( cArea )
+
+Return ( lRetorno )
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³Cr060NoMov³ Autor ³ Pilar S. Albaladejo   ³ Data ³ 18.04.96 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Cria registro para arquivo tempor rio para emiss„o do      ³±±
+±±³          ³ Raz„o com contas sem movimento                             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ Cr060NoMov()                                               ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ CONR060                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Static Function cr060NoMov(nMoeda,lImp)
+
+Local cAlias := Alias(), nSal := 0
+
+If nMoeda == 1
+	dbSelectArea("SI1")
+Else
+	dbSelectArea("SI7")
+EndIf		
+nSal := CalcSaldo(Val(cMes17Ini)-1,nMoeda)
+If lImp .And. nSal != 0    			// Imprime Contas Sem Movimento NO PERIODO (mv_par11 == 1)
+	dbSelectArea ( "cNomeArq" )    	// Se tiver algum saldo anterior
+	Reclock("cNomeArq",.t.)
+	Replace HISTOR WITH OemToAnsi(STR0029)  //"CONTA SEM MOVIMENTO NO PERIODO"
+	Replace CONTA With SI1->I1_CODIGO
+	MsUnlock()
+EndIf
+dbSelectArea(cAlias)
+Return ( "" )
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³Cr060Sint ³ Autor ³ Alice Y. Yamamoto     ³ Data ³ 18.04.96 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Retorna a Conta sint‚tica Anterior                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ Cr060Sint()                                                ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ CONR060                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Static Function Cr060Sint(lEstrang,cContaX)
+Local cOldArea := Alias()
+Local nOldOrd	:= IndexOrd()
+Local lSint    := .T.
+Local nTamConta   //Tamanho da Conta
+Local nPosSI1    //Guarda a posicao no SI1
+
+nPosSI1 := SI1->(Recno())
+cContaSint := Iif(cContaX == Nil, cNomeArq->CONTA, cContaX)
+cContaSint:=Alltrim(cContaSint)
+nTamConta :=Len(cContaSint)
+cContaSint:=Substr(cContaSint,1,nTamConta - 1 )
+dbSelectArea("SI1")
+dbSetOrder(1)
+
+While lSint
+	If	dbSeek(xFilial("SI1")+cContaSint)
+		If SI1->I1_CLASSE =="S"
+			If !lEstrang
+				cDesc := SI1->I1_DESC
+			Else
+				cDesc := SI1->I1_DESCEST
+			EndIf		
+			lSint := .F.
+		Else
+			nTamConta--
+			cContaSint:=Substr(cContaSint,1,nTamConta)
+		Endif
+	Endif
+Enddo
+dbGoTo(nPosSI1)
+dbSelectArea(cOldArea)
+dbSetOrder(nOldOrd)
+Return(cContaSint)
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³Cr060Cabec³ Autor ³ Wagner Mobile Costa   ³ Data ³ 21.05.01 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Monta o cabecalho do RAZAO                                 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ Cr060Cabec()                                               ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ CONR060                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Static Function Cr060Cabec(Titulo, Tamanho, Cabec1, Cabec2, nQuebra, lSalto, nPagInicial,;
+              		  lImpItem, lImpCC, cContAnt, nSaldoAtu, lEstrang, bSinal,;
+              		  nReinicia, dDataFinal, cDigVer, nCodNor, nSaldosDia, dDataAnte,;
+              		  lResumido)
+
+lResumido := Iif(lResumido == Nil,.F.,lResumido)
+                    
+IF li>56 .or. lSalto
+	lSalto:=.F.
+	IF m_pag > nPagInicial .and. cContAnt==CONTA
+		li++
+		If !lImpItem .And. !lImpCC
+			@li,093 PSAY OemToAnsi(STR0016)  //"A TRANSPORTAR : "
+			@li,111 PSAY Abs(nSaldoAtu) Picture  tm(Abs(nSaldoAtu),20,,lEstrang)
+			@li,131 PSAY Eval ( bSinal , nSaldoAtu )
+		Else
+			@li,102 PSAY OemToAnsi(STR0016)  //"A TRANSPORTAR : "
+			ValorContab(nSaldoAtu,li,141,24,,.T.,lEstrang)
+		EndIf	
+	EndIF
+	If m_pag > m_pagfim
+		m_pag := nReinicia
+	EndIf	
+	nTam    := Iif(lImpItem .Or. lImpCC, 218, 130)
+	Tamanho := Iif(lImpItem .Or. lImpCC,"G",Tamanho)
+	ConCgcCabec(Titulo, Cabec1, cabec2, nomeprog, tamanho,, dDataFinal)
+
+	IF nQuebra == 1
+		dbSelectArea("cNomeArq")
+		cDescricao := if(lEstrang,Substr(SI1->I1_DESCEST,1,60),Substr(SI1->I1_DESC,1,60))
+		IF cContAnt == CONTA
+			If cDigVer == "S"
+				@li,011 PSAY OemToAnsi(STR0017) + ;  //"CONTA - "
+				Iif(nCodNor==1.Or.Empty(SI1->I1_RES),;
+				mascara(Alltrim(SI1->I1_CODIGO)+SI1->I1_DC),SI1->I1_RES)+"-"+;
+				cDescricao 
+			Else
+				@li,011 PSAY OemToAnsi(STR0017) + ;  //"CONTA - "
+				Iif(nCodNor==1.Or.Empty(SI1->I1_RES),;
+				mascara(SI1->I1_CODIGO),SI1->I1_RES)+"-"+cDescricao
+			EndIf
+			If !lImpItem .And. !lImpCC
+				@li,093 PSAY OemToAnsi(STR0018)  //"DE TRANSPORTE : "
+				@li,111 PSAY Abs(nSaldoAtu) Picture tm(Abs(nSaldoAtu),20,,lEstrang)
+				@li,131 PSAY Eval ( bSinal , nSaldoAtu )
+			Else
+				@li,102 PSAY OemToAnsi(STR0018)  //"DE TRANSPORTE : "
+				ValorContab(nSaldoAtu,li,141,24,,.T.,lEstrang)		
+			EndIf	
+			nSaldosDia := nSaldoAtu
+			li++
+			If !lResumido
+				@li ++,000 PSAY DATAX
+			Else 
+				li++	
+			EndIf	
+			dDataAnte := DATAX
+			cContaAna := CONTA
+		EndIF
+	EndIF
+EndIF
+
+Return .T.

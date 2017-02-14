@@ -1,0 +1,264 @@
+#include "rwmake.ch"        // incluido pelo assistente de conversao do AP5 IDE em 02/04/02
+
+User Function GERATXT()        // incluido pelo assistente de conversao do AP5 IDE em 02/04/02
+
+SetPrvt("CPERG,NRESP,NHDL,MV_PAR06,CLIN,_SALIAS")
+SetPrvt("AREGS,I,J,")
+
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Verifica as perguntas                                               ³
+//ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´
+//³ mv_par01    Do C.Custo        -  C.C   Inicial                      ³
+//³ mv_par02    Ate C.Custo       -  C.C   Final                        ³
+//³ mv_par03    Do Mês            -  Data de Emissao Inicial            ³
+//³ mv_par04    Nome do Arquivo   -  Nome do arquivo texto para geracao ³
+//³ mv_par05    Final de Linha    -  Caracter(es) para final de linha   ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+cPerg := "GERTXT"
+
+//ValidPerg()
+
+Pergunte(cPerg,.F.)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Montagem da tela                                                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+    @ 200,1 TO 380,380 DIALOG oDlg TITLE OemToAnsi("Gera‡„o de Arquivo Texto")
+    @ 02,10 TO 080,190
+    @ 10,018 Say " Este programa ir  gerar um arquivo texto, conforme os parame- "
+    @ 18,018 Say " tros definidos  pelo usuario,  com os registros do arquivo da "
+    @ 26,018 Say " Contabilidade Gefco .  "
+
+    @ 60,088 BMPBUTTON TYPE 01 ACTION Continua()
+    @ 60,118 BMPBUTTON TYPE 02 ACTION Close(oDlg)
+    @ 60,148 BMPBUTTON TYPE 05 ACTION Pergunte(cPerg,.T.)
+
+    Activate Dialog oDlg Centered
+
+Return
+
+
+Static Function Continua()
+
+_Arq := Alltrim(MV_PAR04)
+ 
+   If File (_Arq)
+      Ferase(_Arq) 
+   EndIf
+   
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Cria o arquivo texto                                                ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+nHdl := fCreate(mv_par04)
+
+If Empty(mv_par05)
+    mv_par05 := CHR(13)+CHR(10)
+Else
+    mv_par05 := Substr(mv_par05,1,13)
+//    mv_par05 := &mv_par05
+Endif
+
+If nHdl == -1
+    MsgAlert("O arquivo de nome "+mv_par04+" n„o p“de ser executado! Verifique os parƒmetros.","Aten‡„o!")
+    Return
+Endif
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Inicio da pesquisa no arquivo de dados                              ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+dbSelectArea("SI2")
+dbSetOrder(3)
+dbSeek(xFilial("SI2")+MV_PAR01,.T.)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Inicializa a regua de processamento                                 ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+
+    Processa({|| RunCont()},"Aguarde ...")// Substituido pelo assistente de conversao do AP5 IDE em 02/04/02 ==>     Processa({|| Execute(RunCont)},"Processando...")
+    Return
+
+Static Function RunCont()
+    ProcRegua(RecCount())
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Processamento                                                       ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+//While !EOF() .And. SI2->I2_DATA >= MV_PAR03 .And. SI2->I2_DATA <= MV_PAR03
+_custo := Space(6)
+_item   := Space(8)
+_Conta := Space(8)
+_valor   := 0
+_valorDeb:= 0
+_valorCre := 0
+
+While !EOF() 
+
+_custo := Space(6)
+_item  := Space(8)
+_Conta := Space(8)
+    
+    IncProc()
+    
+If (SI2->I2_PERIODO >= MV_PAR03) .And. (SI2->I2_PERIODO <= MV_PAR03)
+
+    If Alltrim(SI2->I2_DC) == "-"        
+        dbSkip()
+        Loop
+    Endif
+        
+    If Alltrim(SI2->I2_DC) == "D"
+       _custo:= SI2->I2_CCD
+       _item := SI2->I2_ITEMD
+       _Conta:= SI2->I2_DEBITO
+  //     _valorDeb := (SI2->I2_VALOR * 2)
+//       _valor := (SI2->I2_VALOR -_valorDeb) 
+       If(Substr(SI2->I2_DEBITO,1,1) == "7") .Or. (Substr(SI2->I2_DEBITO,1,1) == "8")
+       Else
+          dbSkip()
+          Loop
+       Endif 
+    Endif
+    
+    If Alltrim(SI2->I2_DC) == "C"
+       _custo:= SI2->I2_CCC  
+       _item := SI2->I2_ITEMC 
+       _Conta:= SI2->I2_CREDITO     
+       _valorCre := (SI2->I2_VALOR * 2)       
+       _valor := (SI2->I2_VALOR -_valorCre)        
+       If(Substr(SI2->I2_CREDITO,1,1) == "7") .Or. (Substr(SI2->I2_CREDITO,1,1) == "8")
+       Else
+          dbSkip()
+          Loop
+       Endif         
+    Endif    
+    
+    If Alltrim(SI2->I2_DC) == "X"
+       _custo:= IIF(!Empty(SI2->I2_CCC),SI2->I2_CCC,SI2->I2_CCD)  
+       _item := IIF(!Empty(SI2->I2_ITEMC),SI2->I2_ITEMC,SI2->I2_ITEMD) 
+       _ContaC:= SI2->I2_CREDITO          
+       _ContaD:= SI2->I2_DEBITO         
+       _valor := NOROUND(( SI2->I2_VALOR / 2))
+       If Substr(SI2->I2_CREDITO,1,1) == "7" .OR. Substr(SI2->I2_DEBITO,1,1) == "7" .OR. Substr(SI2->I2_CREDITO,1,1) == "8" .OR. Substr(SI2->I2_DEBITO,1,1) == "8"      
+       Else
+          dbSkip()
+          Loop
+       Endif 
+    Endif
+
+
+          _Origem := Substr(I2_NUM,1,4)+Substr(I2_NUM,8,3)                  
+           
+//    IF !Empty(_custo)
+//      dbSelectArea("SI3")
+//      dbSetOrder(1)
+//      dbSeek(xFilial("SI3")+_custo,_Conta,1,.T.)
+//    Else
+//      _custo := Space(9)
+//    EndIf
+    
+    IF Empty(_item)
+       _item:= Space(8)
+    EndIf    
+
+    IF Empty(_Conta)
+       _Conta:= Space(8)
+    EndIf    
+
+    IF Len(Alltrim(_custo)) < 6                                            //  07/06/02  corrections DU G5 France  (Saulo)
+       _ctemp:=_custo
+       _custo := " "
+       _tamc   := Len(Alltrim(_ctemp))
+       _ccomp := Replicate("0",(6 - _tamc))
+       _custo := Alltrim(_ctemp) + Alltrim(_ccomp)
+    EndIf    
+
+    IF Len(Alltrim(_item)) < 8                                             //  07/06/02  corrections DU G5 France  (Saulo)
+       _itemp:=_item
+       _item := " "
+       _tami   := Len(Alltrim(_itemp))
+       _icomp := Replicate("0",(8 - _tami))
+       _item := Alltrim(_itemp) + Alltrim(_icomp)
+    EndIf    
+
+//    IF SI2->I2_DC<>"X"                                                 //  07/06/02  corrections DU G5 France  (Saulo)
+//      _valor := Strzero(Int(SI2->I2_VALOR * 100),14)
+//    Else
+//      _valor := Strzero(Int((SI2->I2_VALOR * 100)/2),14)
+//    EndIf    
+
+    IF SI2->I2_DC<>"X"  
+      _valor := Int(SI2->I2_VALOR * 100)
+    Else
+       _valori := Int((SI2->I2_VALOR * 100)/2)
+       _valorCre := NoRound(SI2->I2_VALOR/2)   
+//       _valorDeb := NoRound(SI2->I2_VALOR/2)
+       _valor := NoRound((_valorCre - SI2->I2_VALOR)*100)       
+
+    EndIf    
+
+
+    dbSelectArea("SI2")
+    IF SI2->I2_DC=="X"   //DEB
+//      cLin := Substr(MV_PAR03,5,2)+Substr(_custo,1,3)+Substr(_custo,4,3)+IIF(SI2->I2_DC=="X",Substr(_ContaD,1,8),Substr(_Conta,1,8))+Substr(_item,1,8)+" "+Strzero(Int(SI2->I2_VALOR * 100),14)+IIF(SI2->I2_DC=="X","D",SI2->I2_DC)    //Transform(SI2->I2_VALOR,"99999999999.99")
+      cLin := Substr(MV_PAR03,5,2)+Substr(_custo,1,3)+Substr(_custo,4,3)+IIF(SI2->I2_DC=="X",Substr(Alltrim(_ContaD),1,6),Substr(Alltrim(_Conta),1,6))+"00"+Substr(_item,1,8)+" "+Transform(_valori,"99999999999999")+IIF(SI2->I2_DC=="X","D",SI2->I2_DC)      
+      cLin := cLin +Space(8)+Substr(_custo,1,3)+_Origem+Substr(SI2->I2_ORIGEM,7,6)+Substr(SI2->I2_HIST,1,25)+Space(3)+Substr(SI2->I2_ORIGEM,16,9)+Substr(SI2->I2_ORIGEM,13,3)+Substr(SI2->I2_PERIODO,3,2)+Space(28)+"841"
+      cLin := cLin +Space(12)+CHR(13)+CHR(10)
+      fWrite(nHdl,cLin,Len(cLin))
+    Endif
+// CRED
+      cLin := Substr(MV_PAR03,5,2)+Substr(_custo,1,3)+Substr(_custo,4,3)+IIF(SI2->I2_DC=="X",Substr(Alltrim(_ContaC),1,6),Substr(Alltrim(_Conta),1,6))+"00"+Substr(_item,1,8)+" "+Transform(_valor,"99999999999999")+IIF(SI2->I2_DC=="X","C",SI2->I2_DC) 
+      cLin := cLin +Space(8)+Substr(_custo,1,3)+_Origem+Substr(SI2->I2_ORIGEM,7,6)+Substr(SI2->I2_HIST,1,25)+Space(3)+Substr(SI2->I2_ORIGEM,16,9)+Substr(SI2->I2_ORIGEM,13,3)+Substr(SI2->I2_PERIODO,3,2)+Space(28)+"841"
+      cLin := cLin +Space(12)+CHR(13)+CHR(10)
+    If fWrite(nHdl,cLin,Len(cLin)) != Len(cLin)
+       If !MsgAlert("Ocorreu um erro na grava‡„o do arquivo "+mv_par04+".   Continua?","Aten‡„o!")
+           Exit
+       Endif
+    Endif
+ Endif
+    dbSkip()
+EndDo
+
+fClose(nHdl)
+
+    Close(oDlg)
+
+Return
+
+
+Static Function ValidPerg()
+_sAlias := Alias()
+dbSelectArea("SX1")
+dbSetOrder(1)
+cPerg := PADR(cPerg,6)
+aRegs:={}
+
+// Grupo/Ordem/Pergunta/Variavel/Tipo/Tamanho/Decimal/Presel/GSC/Valid/Var01/Def01/Cnt01/Var02/Def02/Cnt02/Var03/Def03/Cnt03/Var04/Def04/Cnt04/Var05/Def05/Cnt05
+aAdd(aRegs,{cPerg,"01","Do  C.Custo        ?","mv_ch1","C",09,0,0,"G","","mv_par01","","","","","","","","","","","","","",""})
+aAdd(aRegs,{cPerg,"02","Ate C.Custo        ?","mv_ch2","C",09,0,0,"G","","mv_par02","","ZZZZZZ","","","","","","","","","","","",""})
+aAdd(aRegs,{cPerg,"03","Do Mes             ?","mv_ch3","D",08,0,0,"G","","mv_par03","","'01/01/97'","","","","","","","","","","","",""})
+aAdd(aRegs,{cPerg,"04","Nome do Arquivo    ?","mv_ch4","C",12,0,0,"G","","mv_par04","","DEFAULT.TXT","","","","","","","","","","","",""})
+aAdd(aRegs,{cPerg,"05","Final de Linha     ?","mv_ch5","C",30,0,0,"G","","mv_par05","","CHR(13)+CHR(10)","","","","","","","","","","","",""})
+
+For i:=1 to Len(aRegs)
+    If !dbSeek(cPerg+aRegs[i,2])
+        RecLock("SX1",.T.)
+        For j:=1 to FCount()
+            If j <= Len(aRegs[i])
+                FieldPut(j,aRegs[i,j])
+            Endif
+        Next
+        MsUnlock()
+    Endif
+Next
+
+dbSelectArea(_sAlias)
+
+Return
+

@@ -1,0 +1,70 @@
+Group Gefco
+   Version=7.0
+   VSSDB=
+   HasProperties=1
+   Properties
+      BeforeApply=
+      AfterApply=
+      Icon=
+      ID=
+      Version=
+      PalmName=
+      OutPut=
+   End
+   ProjectsCount=1
+   Project Gefco
+      FoldersCount=4
+      Folder Pontos de Entrada
+         VSSPath=Fontes
+         FilesCount=3
+         File \Microsiga\Gefco\Fontes\Pontos de Entrada\TM200QBR.prw
+             Type=T
+         End
+         File \Microsiga\Gefco\Fontes\Pontos de Entrada\TM050TOK.PRW
+             Type=T
+         End
+         File \Microsiga\Gefco\Fontes\Pontos de Entrada\TM200FIM.prw
+             Type=T
+         End
+      End
+      Folder EDI
+         VSSPath=Definições
+         FilesCount=4
+         File \Microsiga\Gefco\Fontes\EDI\GEFA001.PRW
+             Type=T
+         End
+         File \Microsiga\Gefco\Fontes\EDI\GEFA002.prw
+             Type=T
+         End
+         File \Microsiga\Gefco\Fontes\EDI\GEFA004.PRW
+             Type=T
+         End
+         File \Microsiga\Gefco\Fontes\EDI\GEFA003.PRW
+             Type=T
+         End
+      End
+      Folder Relatórios
+         VSSPath=Nova Pasta3
+         FilesCount=1
+         File \Microsiga\Gefco\Fontes\Relatórios\RTMSR01.PRW
+             Type=T
+         End
+      End
+      Folder Cadastros
+         VSSPath=Nova Pasta4
+         FilesCount=4
+         File \Microsiga\Gefco\Fontes\Cadastros\szf.prw
+             Type=T
+         End
+         File \Microsiga\Gefco\Fontes\Cadastros\szg.prw
+             Type=T
+         End
+         File \Microsiga\Gefco\Fontes\Cadastros\szi.prw
+             Type=T
+         End
+         File \Microsiga\Gefco\Fontes\Cadastros\SZH.prw
+             Type=T
+         End
+      End
+   End
+End

@@ -1,0 +1,566 @@
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³  DATA  ³ BOPS ³Program.³					ALTERACAO 				  ³±±
+±±ÃÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³30.03.99³xxxxxx³Alice   ³Reposicionar o relat¢rio. Conta com tamanho 20³±±
+±±³20.04.99³xxxxxx³Alice   ³Alteracao de macro.                           ³±±
+±±ÀÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+#INCLUDE "XTFR110.CH"
+#include "Protheus.ch"
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡„o    ³ ATFR110  ³ Autor ³ Wagner Xavier         ³ Data ³ 03.08.93 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³ Relacao das aquisicoes                                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe e ³ ATFR110                                                    ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ SIGAATF                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+Last change:  CIA   4 Jan 96    5:22 pm
+*/
+USER Function XTFR110
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define Variaveis                                             ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+LOCAL cString:= "SN3"
+LOCAL cDesc1 := OemToAnsi(STR0001) // "Este programa ira' emitir a rela‡„o das aquisi‡”es"
+LOCAL cDesc2 := OemToAnsi(STR0002) // "efetuadas dentro de um periodo."
+LOCAL cDesc3 := ""
+LOCAL wnrel
+
+PRIVATE aReturn  := { OemToAnsi(STR0018), 1,OemToAnsi(STR0019), 2, 2, 1, "",1 }
+PRIVATE aLinha   := { }
+PRIVATE cPerg    := "AFR110"
+PRIVATE nomeprog := "ATFR110"
+PRIVATE nLastKey := 0
+
+PRIVATE tamanho  := "M"
+PRIVATE titulo   := OemToAnsi(STR0003) // "Relacao dos bens adquiridos"
+PRIVATE cabec1
+PRIVATE cabec2
+PRIVATE cabec3
+Private nTamCC	 := Len(SN3->N3_CCUSTO)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Verifica as perguntas selecionadas                           ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+AjustaSX1("AFR110")
+pergunte("AFR110",.F.)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis utilizadas para parametros                     ³
+//³ mv_par01            // a partir da data                  ³
+//³ mv_par02            // ate a data                        ³
+//³ mv_par03            // da conta                          ³
+//³ mv_par04            // ate a conta                       ³
+//³ mv_par05            // do centro de custo                ³
+//³ mv_par06            // ate o centro de custo             ³
+//³ mv_par07            // valores na moeda                  ³
+//³ mv_par08            // Considera itens baixados			 ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+wnrel := "ATFR110"
+aOrd  := { 	OemToAnsi(STR0004),; // "Conta"
+				OemToAnsi(STR0005),; // "C Custo"
+				OemToAnsi(STR0006)} // "Data Aquisicao"
+wnrel := SetPrint(cString,wnrel,cPerg,@titulo,cDesc1,cDesc2,cDesc3,.F.,aOrd,,Tamanho)
+
+If nLastKey == 27
+	Return
+End
+
+SetDefault(aReturn,cString)
+
+If nLastKey == 27
+	Return
+End
+
+RptStatus({|lEnd| FR110Imp(@lEnd,wnRel,cString)},Titulo)
+
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡„o    ³ FR110IMP ³ Autor ³ Wagner Xavier         ³ Data ³ 03.08.93 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³ Relacao das aquisicoes                                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe e ³ FR110IMP(lEnd,WnRel,Titulo)                                ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ lEnd    - A‡Æo do Codeblock                                ³±±
+±±³          ³ wnRel   - T¡tulo do relat¢rio                              ³±±
+±±³          ³ cString - Mensagem                                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Gen‚rico                                                   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³         ATUALIZACOES SOFRIDAS DESDE A CONSTRU€AO INICIAL.             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Programador ³ Data   ³ BOPS ³  Motivo da Alteracao                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³C. Denardi  ³06/10/03³66.785³Localizacao de casas decimais na Picture  ³±±
+±±³            ³        ³      ³em todos os relatorios do Ativo Fixo      ³±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function FR110Imp(lEnd,WnRel,cString)
+
+LOCAL nTotValor := 0
+LOCAL nGerValor := 0
+LOCAL nOrdem    := 0
+LOCAL nOrder    := 0
+LOCAL nRec
+LOCAL cBase
+LOCAL cItem
+LOCAL cTipo
+LOCAL cBemAnt   := " "
+LOCAL cIndice
+LOCAL CbTxt
+LOCAL cbCont
+Local nMoeda    := 0
+Local nVOrig	:= 0
+Local nVDep     := 0
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis utilizadas para Impressao do Cabecalho e Rodape    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+cbtxt    := Space(10)
+cbcont   := 0
+cabec1   := OemToAnsi(STR0007) // "Base       Item Descricao                                Aquisic.   Quantidade   Nota Fisc. Chapa    Grupo    C. Custo  Localizacao"
+
+*                                  XXXXXXXXXX XXXX XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX 99/99/9999 9.999.999,99 XXXXXX     XXXXXX   XXXX     XXXXXXXXX XX           
+*                                  01234^678901234^678901234^678901234^678901234^678901234^678901234^678901234^678901234^678901234^678901234^678901234^678901234^678901234^
+*                                            1         2         3         4         5         6         7         8         9         0         1         2         3     
+*                                                                                                                                      1                                   
+cabec2   := OemToAnsi(STR0008) // "                In.Depr.  Tx.Depr.       Valor Original    Deprec. Acumulada   Correcao Acumulada"
+li       := 80
+m_pag    := 1
+
+nOrdem   := aReturn[8]
+nMoeda   := mv_par07
+cMoeda   := Str(nMoeda,1)
+titulo   += OemToAnsi(STR0009)+; // " por "
+				aOrd[nOrdem]+OemToAnsi(STR0010) +; //" em "
+				Getmv("MV_MOEDA"+cMoeda)+OemToAnsi(STR0011)+; //" entre "
+				DTOC(mv_par01)+OemToAnsi(STR0012)+DTOC(mv_par02) // " a "
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Localiza registro inicial                                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+IF nOrdem == 1
+	cChave := xFilial("SN3")
+	If .NOT. Empty( mv_par03 )
+		cChave += mv_par03
+	Endif
+	SN3->( dbSetOrder(4) )
+	SN3->( dbSeek(cChave , .T. ) )
+	cCond1:="SN3->N3_CCONTAB <= mv_par04"
+	cCond2:="cQuebra == SN3->N3_CCONTAB"
+ElseIF nOrdem == 2
+	cChave := xFilial("SN3")
+	If .NOT. Empty( mv_par05 )
+		cChave += mv_par05
+	Endif
+	SN3->( dbSetOrder(5) )
+	SN3->( dbSeek(cChave , .T. ) )
+	cCond1:="SN3->N3_CCUSTO <= mv_par06"
+	cCond2:="cQuebra == SN3->N3_CCUSTO"
+ElseIF nOrdem == 3
+	cIndice := CriaTrab(Nil,.f.)
+	cChave  := "N3_FILIAL+DtoS(N3_AQUISIC)+N3_CBASE+N3_ITEM"
+	IndRegua("SN3",cIndice,cChave,,AFR110Filtro(),OemToAnsi(STR0020))
+	nIndex  := RetIndex("SN3")
+	dbSelectArea("SN3")
+	#IFNDEF  TOP
+		dbSetIndex(cIndice+OrdBagExt())
+	#ENDIF
+	dbSetOrder(nIndex+1)
+	DbGoTop()
+	cCond1 := "!Eof()"
+	cCond2 := "cQuebra == SN3->N3_AQUISIC"
+End
+
+SetRegua(SN3->(RecCount()))
+
+While !SN3->(Eof()) .And. SN3->N3_FILIAL == xFilial("SN3") .And. &cCond1
+    
+	dbSelectArea("SN3")
+    
+	IF  nOrdem == 1
+		 cQuebra := SN3->N3_CCONTAB
+
+	ElseIF nOrdem == 2
+		 cQuebra := SN3->N3_CCUSTO
+	ElseIF nOrdem == 3
+		 cQuebra := SN3->N3_AQUISIC
+	End
+    
+	IncRegua()
+    
+	IF  Empty(cQuebra) .or. SN3->N3_TIPO != "01"
+		 SN3->(dbSkip())
+		 Loop
+	End
+    
+	While 	! SN3->(Eof()) .And. SN3->N3_FILIAL  == xFilial("SN3") .And.;
+			&cCond1 .AND. &cCond2
+        
+		IF lEnd
+			@PROW()+1,001 PSAY OemToAnsi(STR0013) // "CANCELADO PELO OPERADOR"
+			Exit
+		End
+        
+		IncRegua()
+		If SN3->N3_CCUSTO < mv_par05 .or. SN3->N3_CCUSTO > mv_par06
+		 	SN3->(dbSkip())
+			Loop
+		Endif
+
+		If SN3->N3_CCONTAB < mv_par03 .or. SN3->N3_CCONTAB > mv_par04
+		 	SN3->(dbSkip())
+			Loop
+		Endif		  
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Verifica se registro e' de aquisicao               ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		IF SN3->N3_TIPO != "01"
+			dbSkip()
+			Loop
+		End
+        
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ So' devera ser impresso uma vez o bem no relatorio ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		IF SN3->N3_CBASE+SN3->N3_ITEM+SN3->N3_TIPO == cBemAnt
+			SN3->(dbSkip())
+			Loop
+		EndIF
+        
+		cBemAnt := SN3->N3_CBASE+SN3->N3_ITEM+SN3->N3_TIPO
+        
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Verifica se data da baixa satisfaz condicao        ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		IF SN3->N3_AQUISIC < mv_par01 .or. SN3->N3_AQUISIC > mv_par02
+			SN3->(dbSkip())
+			Loop
+		End
+        
+		cBase := SN3->N3_CBASE
+		cItem := SN3->N3_ITEM
+		cTipo := SN3->N3_TIPO
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Verifica se considera itens baixados ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		IF mv_par08 == 2 .And. Val( SN3->N3_BAIXA ) # 0
+			SN3->( dbSkip() )
+			Loop
+		Endif
+		
+		nVOrig := Af110VOrig(cMoeda,SN3->N3_CBASE,SN3->N3_ITEM,SN3->N3_TIPO)
+		nVDep  := Af110VDep(cMoeda,SN3->N3_CBASE,SN3->N3_ITEM,SN3->N3_TIPO)
+        
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Verifica se houve baixas parciais do item, pois se ³
+		//³ existe, o item j   ser   impresso.                 ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		IF Val( SN3->N3_BAIXA ) # 0
+			nRec  := SN3->( Recno () )
+			nOrder := SN3->( IndexOrd() )
+			SN3->( dbSetOrder ( 1 ) )
+			SN3->( dbSeek(cFilial+cBase+cItem+cTipo+'0') )
+			IF SN3->( Found() )
+				SN3->( dbGoto ( nRec ) )
+				SN3->( dbSetOrder ( nOrder ) )
+				SN3->( dbSkip() )
+				Loop
+			End
+			SN3->( dbGoto ( nRec ) )
+			SN3->( dbSetOrder ( nOrder ) )
+		End
+        
+		IF li > 58
+//			cabec(titulo,cabec1,cabec2,nomeprog,tamanho,IIF(aReturn[4]==1,15,18))
+		End
+        
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Localiza item no SN1                               ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		SN1->( dbSeek(cFilial + cBASE + cITEM) )
+        
+		dbSelectArea("SN3")
+		@ li,  0    PSAY    SN3->N3_CBASE
+		@ li, 11    PSAY    SN3->N3_ITEM 
+		@ li, 16    PSAY    SubS(SN1->N1_DESCRIC,1,40) 
+		@ li, 57    PSAY    SN3->N3_AQUISIC 
+		@ li, 68    PSAY    SN1->N1_QUANTD  PICTURE PesqPict("SN1","N1_QUANTD",12)
+		@ li, 81    PSAY    SN1->N1_NFISCAL 
+//		@ li, 92    PSAY    SN1->N1_CHAPA   
+//		@ li,101    PSAY    SN1->N1_GRUPO   
+		If nTamCC < 10
+			@ li,110 PSAY    SN3->N3_CCUSTO  
+		Endif
+//		@ li,120 PSAY SN1->N1_LOCAL   
+//		li ++
+        
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Se Houver fornecedor, imprime o nome  ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If .NOT. Empty( SN1->N1_FORNEC )
+			dbSelectArea("SA2")
+			dbSetOrder(1)
+			If dbSeek(xFilial("SA2") + SN1->N1_FORNEC + SN1->N1_LOJA )
+				@ li,125            PSAY OemToAnsi(STR0014) // "FORNECEDOR " 
+				@Prow(),Pcol()      PSAY SN1->N1_FORNEC + "-" + SN1->N1_LOJA
+  				@Prow(),Pcol()+2    PSAY SA2->A2_NREDUZ
+  //				li ++
+			Endif
+			dbSelectArea("SN3")
+		Endif
+        
+//		@ li, 16    PSAY    SN3->N3_DINDEPR 
+//		@ li, 26    PSAY    &('SN3->N3_TXDEPR'+cMoeda)   PICTURE PesqPict("SN3","N3_TXDEPR"+cMoeda,  8,nMoeda) 
+		@ li, 180   PSAY    nVOrig    PICTURE PesqPict("SN3","N3_VORIG" +cMoeda, 19,nMoeda)
+/*		@ li, 57    PSAY    &('SN3->N3_VRDACM'+cMoeda)   PICTURE PesqPict("SN3","N3_VRDACM"+cMoeda, 19,nMoeda)
+		IF MV_PAR07 == 1
+			@ li, 78    PSAY    SN3->N3_VRCACM1 PICTURE PesqPict("SN3","N3_VRCACM1", 19)
+		End
+		@ li, 99 PSAY SN1->N1_BAIXA */
+		If nTamCC > 9
+			@ li,200 PSAY SN3->N3_CCUSTO  
+		Endif
+//		@ li, 220   PSAY    &('SN3->N3_VRDACM'+cMoeda)   PICTURE PesqPict("SN3","N3_VRDACM"+cMoeda, 19,nMoeda)        
+		@ li, 220   PSAY    nVDep PICTURE PesqPict("SN3","N3_VRDACM1", 19)		
+
+		@ li, 240   PSAY    SN3->N3_CCONTAB		
+		
+/*		li++
+		@ li, 16    PSAY    OemToAnsi(STR0015) // "Conta do Bem         Conta Correcao       Cta.Desp.Depr.       Cta.Depr.Acum.       Cta.Corr.Depr. "
+*                                                XXXXXXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXXXXXX
+*                                                678901234^678901234^678901234^678901234^678901234^678901234^678901234^678901234^678901234^678901234^6789
+*                                                    2         3         4         5         6         7         8         9         0         1         
+*                                                                                                                                    1                   
+		li++
+		@ li, 200   PSAY     SN3->N3_CCONTAB 
+/*		@ li, 37    PSAY     SN3->N3_CCORREC 
+		@ li, 58    PSAY     SN3->N3_CDEPREC 
+		@ li, 79    PSAY     SN3->N3_CCDEPR  
+		@ li, 100   PSAY     SN3->N3_CDESP   */
+        
+		dbSelectArea("SN3")
+
+		If SN1->N1_PATRIM $ " NP"
+			nTotValor += nVOrig
+		Else
+			nTotValor -= nVOrig
+		Endif	
+
+		li+=1
+		SN3->(dbSkip())
+	End
+    
+	IF (nTotValor) <> 0
+		IF li > 58
+//			cabec(titulo,cabec1,cabec2,nomeprog,tamanho,IIF(aReturn[4]==1,15,18))
+		Endif
+		@  li,  0 PSAY OemToAnsi(STR0016) // "TOTAL : " 
+		@  li,  8 PSAY cQuebra 
+		@  li, 36 PSAY nTotValor    PICTURE PesqPict("SN3","N3_VORIG"+cMoeda, 21,nMoeda) 
+		li++
+		@  li, 0 PSAY Replicate("-",137) 
+		li++
+		nGerValor+=nTotValor
+		nTotValor:=0
+	End
+End
+
+IF li<> 80
+	IF li > 58
+		cabec(titulo,cabec1,cabec2,nomeprog,tamanho,IIF(aReturn[4]==1,15,18))
+	Endif
+   @  li, 0    PSAY OemToAnsi(STR0017) // "TOTAL GERAL: " 
+   @  li, 36   PSAY nGerValor      PICTURE  PesqPict("SN3","N3_VORIG"+cMoeda, 21,nMoeda) 
+   roda(cbcont,cbtxt)
+End
+IF nOrdem == 3
+   nIndex     := RetIndex("SN3")
+   Ferase(cIndice+IndexExt())
+End
+
+dbClearFilter( ) 
+
+RetIndex("SN3")
+
+If aReturn[5] = 1
+   Set Printer To
+   dbCommitAll()
+   Ourspool(wnrel)
+End
+MS_FLUSH()
+
+/*
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡„o    ³ AFR110Filt ³ Autor ³ Cesar C S Prado       ³ Data ³ 03.08.94 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³ Filtra indice alternativo no periodo solicitado              ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe e ³ Void AFR110Filtro()                                          ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ Nenhum                                                       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ Generico                                                     ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function AFR110Filtro()
+Local cFiltro
+
+cFiltro := 'N3_FILIAL == "'  + xFilial("SN3")  + '" .And. '
+cFiltro += 'DTOS(N3_AQUISIC) >= "' + DtoS( mv_par01) + '" .And. '
+cFiltro += 'DTOS(N3_AQUISIC) <= "' + DtoS( mv_par02) + '" .AND. '
+cFiltro += 'N3_TIPO == "01"'
+
+Return cFiltro
+
+/*/
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ AjustaSx1    ³ Autor ³ Claudio D. de Souza	³ Data ³ 28/05/04 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Verifica/cria SX1 a partir de matriz para verificacao          ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ Siga                                                           ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Static Function AjustaSX1(cPerg)
+
+Local _sAlias	:= Alias()
+Local aCposSX1	:= {}
+Local nX 		:= 0
+Local lAltera	:= .F.
+Local nCondicao
+Local cKey		:= ""
+Local nJ 		:= 0
+Local aHelpPor := {}
+Local aHelpEng := {}
+Local aHelpSpa	:= {}
+Local aPergs	:= {}
+
+aCposSX1:={"X1_PERGUNT","X1_PERSPA","X1_PERENG","X1_VARIAVL","X1_TIPO","X1_TAMANHO",;
+			"X1_DECIMAL","X1_PRESEL","X1_GSC","X1_VALID",;
+			"X1_VAR01","X1_DEF01","X1_DEFSPA1","X1_DEFENG1","X1_CNT01",;
+			"X1_VAR02","X1_DEF02","X1_DEFSPA2","X1_DEFENG2","X1_CNT02",;
+			"X1_VAR03","X1_DEF03","X1_DEFSPA3","X1_DEFENG3","X1_CNT03",;
+			"X1_VAR04","X1_DEF04","X1_DEFSPA4","X1_DEFENG4","X1_CNT04",;
+			"X1_VAR05","X1_DEF05","X1_DEFSPA5","X1_DEFENG5","X1_CNT05",;
+			"X1_F3", "X1_PYME","X1_GRPSXG","X1_HELP" }
+
+Aadd(aPergs,{"Considera itens baixados?","¿Cons. Cancelados?","Cons. Posted ?","mv_ch8","N",1,0,1,"C","","mv_par08","Sim","Si","Yes","","","Nao","No","No","","","","","","","","","","","","","","","","","","S","",""})
+
+dbSelectArea("SX1")                                                                                                                                                                          
+dbSetOrder(1)
+For nX:=1 to Len(aPergs)
+	lAltera := .F.
+	If MsSeek(cPerg+Right(aPergs[nX][11], 2))
+		If (ValType(aPergs[nX][Len(aPergs[nx])]) = "B" .And.;
+			 Eval(aPergs[nX][Len(aPergs[nx])], aPergs[nX] ))
+			aPergs[nX] := ASize(aPergs[nX], Len(aPergs[nX]) - 1)
+			lAltera := .T.
+		Endif
+	Endif
+	
+	If ! lAltera .And. Found() .And. X1_TIPO <> aPergs[nX][5]	
+ 		lAltera := .T.		// Garanto que o tipo da pergunta esteja correto
+ 	Endif	
+	
+	If ! Found() .Or. lAltera
+		RecLock("SX1",If(lAltera, .F., .T.))
+		Replace X1_GRUPO with cPerg
+		Replace X1_ORDEM with Right(aPergs[nX][11], 2)
+		For nj:=1 to Len(aCposSX1)
+			If Len(aPergs[nX]) >= nJ .And. aPergs[nX][nJ] <> Nil .And.;
+				FieldPos(AllTrim(aCposSX1[nJ])) > 0
+				Replace &(AllTrim(aCposSX1[nJ])) With aPergs[nx][nj]
+			Endif
+		Next nj
+		MsUnlock()
+		cKey := "P."+AllTrim(X1_GRUPO)+AllTrim(X1_ORDEM)+"."
+
+		If ValType(aPergs[nx][Len(aPergs[nx])]) = "A"
+			aHelpSpa := aPergs[nx][Len(aPergs[nx])]
+		Else
+			aHelpSpa := {}
+		Endif
+		
+		If ValType(aPergs[nx][Len(aPergs[nx])-1]) = "A"
+			aHelpEng := aPergs[nx][Len(aPergs[nx])-1]
+		Else
+			aHelpEng := {}
+		Endif
+
+		If ValType(aPergs[nx][Len(aPergs[nx])-2]) = "A"
+			aHelpPor := aPergs[nx][Len(aPergs[nx])-2]
+		Else
+			aHelpPor := {}
+		Endif
+
+		PutSX1Help(cKey,aHelpPor,aHelpEng,aHelpSpa)
+	Endif
+Next
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³Af110VOrig³ Autor ³ Claudio D. de Souza   ³ Data ³ 23/07/04 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Retorna o valor original do bem                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ ATFR110                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Static Function Af110VOrig(cMoeda,cBase,cItem,cTipo)
+Local aAreaSn3 := SN3->(GetArea())
+Local nVOrig := 0
+
+SN3->(DbSetOrder(1))
+SN3->(MsSeek(xFilial("SN3")+SN3->(cBase+cItem+cTipo)))
+While SN3->(!Eof()) .And.;
+		SN3->(N3_CBASE+N3_ITEM+SN3->N3_TIPO) == cBase+cItem+cTipo
+	nVOrig += SN3->&("N3_VORIG"+cMoeda)
+	SN3->(DbSkip())
+End			
+SN3->(RestArea(aAreaSn3))
+
+Return nVOrig
+
+Static Function Af110VDep(cMoeda,cBase,cItem,cTipo)
+Local aAreaSn3 := SN3->(GetArea())
+Local nVDep    := 0
+
+SN3->(DbSetOrder(1))
+SN3->(MsSeek(xFilial("SN3")+SN3->(cBase+cItem+cTipo)))
+While SN3->(!Eof()) .And.;
+		SN3->(N3_CBASE+N3_ITEM+SN3->N3_TIPO) == cBase+cItem+cTipo
+	nVDep += SN3->&("N3_VRDACM"+cMoeda)
+	SN3->(DbSkip())
+End			
+SN3->(RestArea(aAreaSn3))
+
+Return nVDep

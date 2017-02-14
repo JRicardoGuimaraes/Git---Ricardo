@@ -1,0 +1,205 @@
+#INCLUDE "PROTHEUS.CH"
+#INCLUDE "APWEBSRV.CH"
+#INCLUDE "TOTVS.CH"
+//#INCLUDE "XMLCSVCS.CH"
+
+/* ===============================================================================
+WSDL Location    http://www.vitgbrasil.com.br:80/vedi/vitgrfqws?wsdl
+Gerado em        12/26/16 13:00:29
+Observações      Código-Fonte gerado por ADVPL WSDL Client 1.120703
+                 Alterações neste arquivo podem causar funcionamento incorreto
+                 e serão perdidas caso o código-fonte seja gerado novamente.
+=============================================================================== */
+
+//User Function _NLSHOGI ; Return  // "dummy" function - Internal Use 
+
+/* -------------------------------------------------------------------------------
+WSDL Service WSRFQImporterService
+------------------------------------------------------------------------------- */
+/*
+WSCLIENT WSRFQImporterService
+
+	WSMETHOD NEW
+	WSMETHOD INIT
+	WSMETHOD RESET
+	WSMETHOD CLONE
+	WSMETHOD importRfQInfo
+	WSMETHOD exportRfQInfo
+
+	WSDATA   _URL                      AS String
+	WSDATA   _HEADOUT                  AS Array of String
+	WSDATA   _COOKIES                  AS Array of String
+	WSDATA   norgCode                  AS int
+	WSDATA   creferenceNumber          AS string
+	WSDATA   ctripNumber               AS string
+	WSDATA   ccreationDate             AS dateTime
+	WSDATA   cvehicleType              AS string
+	WSDATA   ctotalFee                 AS string
+	WSDATA   ckmTotal                  AS string
+	WSDATA   ccnpjSupplierCollection   AS string
+	WSDATA   ccollectionAddress        AS string
+	WSDATA   ccollectionOutDate        AS dateTime
+	WSDATA   ctargetAddress            AS string
+	WSDATA   cexitFee                  AS string
+	WSDATA   creturn                   AS string
+	WSDATA   cmessage                  AS string
+	WSDATA   ctransporterCNPJ          AS string
+	WSDATA   cdriverCPF                AS string
+	WSDATA   clicensePlate1            AS string
+	WSDATA   clicensePlate2            AS string
+
+ENDWSCLIENT
+
+WSMETHOD NEW WSCLIENT WSRFQImporterService
+::Init()
+If !FindFunction("XMLCHILDEX")
+	UserException("O Código-Fonte Client atual requer os executáveis do Protheus Build [7.00.131227A-20161027] ou superior. Atualize o Protheus ou gere o Código-Fonte novamente utilizando o Build atual.")
+EndIf
+Return Self
+
+WSMETHOD INIT WSCLIENT WSRFQImporterService
+Return
+
+WSMETHOD RESET WSCLIENT WSRFQImporterService
+	::norgCode           := NIL 
+	::creferenceNumber   := NIL 
+	::ctripNumber        := NIL 
+	::ccreationDate      := NIL 
+	::cvehicleType       := NIL 
+	::ctotalFee          := NIL 
+	::ckmTotal           := NIL 
+	::ccnpjSupplierCollection := NIL 
+	::ccollectionAddress := NIL 
+	::ccollectionOutDate := NIL 
+	::ctargetAddress     := NIL 
+	::cexitFee           := NIL 
+	::creturn            := NIL 
+	::cmessage           := NIL 
+	::ctransporterCNPJ   := NIL 
+	::cdriverCPF         := NIL 
+	::clicensePlate1     := NIL 
+	::clicensePlate2     := NIL 
+	::Init()
+Return
+
+WSMETHOD CLONE WSCLIENT WSRFQImporterService
+Local oClone := WSRFQImporterService():New()
+	oClone:_URL          := ::_URL 
+	oClone:norgCode      := ::norgCode
+	oClone:creferenceNumber := ::creferenceNumber
+	oClone:ctripNumber   := ::ctripNumber
+	oClone:ccreationDate := ::ccreationDate
+	oClone:cvehicleType  := ::cvehicleType
+	oClone:ctotalFee     := ::ctotalFee
+	oClone:ckmTotal      := ::ckmTotal
+	oClone:ccnpjSupplierCollection := ::ccnpjSupplierCollection
+	oClone:ccollectionAddress := ::ccollectionAddress
+	oClone:ccollectionOutDate := ::ccollectionOutDate
+	oClone:ctargetAddress := ::ctargetAddress
+	oClone:cexitFee      := ::cexitFee
+	oClone:creturn       := ::creturn
+	oClone:cmessage      := ::cmessage
+	oClone:ctransporterCNPJ := ::ctransporterCNPJ
+	oClone:cdriverCPF    := ::cdriverCPF
+	oClone:clicensePlate1 := ::clicensePlate1
+	oClone:clicensePlate2 := ::clicensePlate2
+Return oClone
+
+// WSDL Method importRfQInfo of Service WSRFQImporterService
+
+WSMETHOD importRfQInfo WSSEND norgCode,creferenceNumber,ctripNumber,ccreationDate,cvehicleType,ctotalFee,ckmTotal,ccnpjSupplierCollection,ccollectionAddress,ccollectionOutDate,ctargetAddress,cexitFee WSRECEIVE creturn WSCLIENT WSRFQImporterService
+Local cSoap := "" , oXmlRet
+
+BEGIN WSMETHOD
+
+cSoap += '<importRfQInfo xmlns="http://ws.vitgbrasil.com/">'
+cSoap += WSSoapValue("orgCode", ::norgCode, norgCode , "int", .F. , .F., 0 , NIL, .F.) 
+cSoap += WSSoapValue("referenceNumber", ::creferenceNumber, creferenceNumber , "string", .F. , .F., 0 , NIL, .F.) 
+cSoap += WSSoapValue("tripNumber", ::ctripNumber, ctripNumber , "string", .F. , .F., 0 , NIL, .F.) 
+cSoap += WSSoapValue("creationDate", ::ccreationDate, ccreationDate , "dateTime", .F. , .F., 0 , NIL, .F.) 
+cSoap += WSSoapValue("vehicleType", ::cvehicleType, cvehicleType , "string", .F. , .F., 0 , NIL, .F.) 
+cSoap += WSSoapValue("totalFee", ::ctotalFee, ctotalFee , "string", .F. , .F., 0 , NIL, .F.) 
+cSoap += WSSoapValue("kmTotal", ::ckmTotal, ckmTotal , "string", .F. , .F., 0 , NIL, .F.) 
+cSoap += WSSoapValue("cnpjSupplierCollection", ::ccnpjSupplierCollection, ccnpjSupplierCollection , "string", .F. , .F., 0 , NIL, .F.) 
+cSoap += WSSoapValue("collectionAddress", ::ccollectionAddress, ccollectionAddress , "string", .F. , .F., 0 , NIL, .F.) 
+cSoap += WSSoapValue("collectionOutDate", ::ccollectionOutDate, ccollectionOutDate , "dateTime", .F. , .F., 0 , NIL, .F.) 
+cSoap += WSSoapValue("targetAddress", ::ctargetAddress, ctargetAddress , "string", .F. , .F., 0 , NIL, .F.) 
+cSoap += WSSoapValue("exitFee", ::cexitFee, cexitFee , "string", .F. , .F., 0 , NIL, .F.) 
+cSoap += "</importRfQInfo>"
+
+oXmlRet := SvcSoapCall(	Self,cSoap,; 
+	"",; 
+	"DOCUMENT","http://ws.vitgbrasil.com/",,,; 
+	"http://www.vitgbrasil.com.br:80/vedi/vitgrfqws")
+
+::Init()
+::creturn            :=  WSAdvValue( oXmlRet,"_IMPORTRFQINFORESPONSE:_RETURN:TEXT","string","Username=valeria.vasconcelos","Password=4h8dk983sxy987shkl85ffsw",NIL,NIL,NIL,NIL) 
+
+END WSMETHOD
+
+oXmlRet := NIL
+Return .T.
+
+// WSDL Method exportRfQInfo of Service WSRFQImporterService
+
+WSMETHOD exportRfQInfo WSSEND norgCode,creferenceNumber,ctripNumber WSRECEIVE cmessage,ctransporterCNPJ,cdriverCPF,clicensePlate1,clicensePlate2 WSCLIENT WSRFQImporterService
+Local cSoap := "" , oXmlRet
+
+BEGIN WSMETHOD
+
+cSoap += '<exportRfQInfo xmlns="http://ws.vitgbrasil.com/">'
+cSoap += WSSoapValue("orgCode", ::norgCode, norgCode , "int", .F. , .F., 0 , NIL, .F.) 
+cSoap += WSSoapValue("referenceNumber", ::creferenceNumber, creferenceNumber , "string", .F. , .F., 0 , NIL, .F.) 
+cSoap += WSSoapValue("tripNumber", ::ctripNumber, ctripNumber , "string", .F. , .F., 0 , NIL, .F.) 
+cSoap += "</exportRfQInfo>"
+
+oXmlRet := SvcSoapCall(	Self,cSoap,; 
+	"",; 
+	"DOCUMENT","http://ws.vitgbrasil.com/",,,; 
+	"http://www.vitgbrasil.com.br:80/vedi/vitgrfqws")
+
+::Init()
+::cmessage           :=  WSAdvValue( oXmlRet,"_EXPORTRFQINFORESPONSE:_MESSAGE:TEXT","string",NIL,NIL,NIL,NIL,NIL,NIL) 
+::ctransporterCNPJ   :=  WSAdvValue( oXmlRet,"_EXPORTRFQINFORESPONSE:_TRANSPORTERCNPJ:TEXT","string",NIL,NIL,NIL,NIL,NIL,NIL) 
+::cdriverCPF         :=  WSAdvValue( oXmlRet,"_EXPORTRFQINFORESPONSE:_DRIVERCPF:TEXT","string",NIL,NIL,NIL,NIL,NIL,NIL) 
+::clicensePlate1     :=  WSAdvValue( oXmlRet,"_EXPORTRFQINFORESPONSE:_LICENSEPLATE1:TEXT","string",NIL,NIL,NIL,NIL,NIL,NIL) 
+::clicensePlate2     :=  WSAdvValue( oXmlRet,"_EXPORTRFQINFORESPONSE:_LICENSEPLATE2:TEXT","string",NIL,NIL,NIL,NIL,NIL,NIL) 
+
+END WSMETHOD
+
+oXmlRet := NIL
+Return .T.
+
+/*
+USER FUNCTION fTSTITG3()
+Local oWsITG 
+
+oWsITG := WSRFQImporterService():Init("Username=valeria.vasconcelos","Password=4h8dk983sxy987shkl85ffsw")
+
+//oWSITG:nARG0 := 123456 	
+//oWSITG:cARG1 := 'valeria.vasconcelos'
+//oWSITG:nARG2 := 654321 	// '4h8dk983sx987shkl85ffsw'
+
+//oWSITG:getAuthInfo()
+
+Return Nil 
+
+
+user function tstpost()
+Local cUrl := "http://www.vitgbrasil.com.br:80/vedi/vitgrfqws"
+Local nTimeOut := 120
+Local aHeadOut := {}
+Local cHeadRet := ""
+Local sPostRet := ""
+aadd(aHeadOut,'User-Agent: Mozilla/4.0 (compatible; Protheus '+GetBuild()+')')
+aadd(aHeadOut,'Content-Type: application/x-www-form-urlencoded')
+sPostRet := HttpPost(cUrl,"Username=valeria.vasconcelos","Password=4h8dk983sxy987shkl85ffsw",nTimeOut,aHeadOut,@cHeadRet)
+if !empty(sPostRet)
+  conout("HttpPost Ok")
+  varinfo("WebPage", sPostRet)
+else
+  conout("HttpPost Failed.")
+  varinfo("Header", cHeadRet)
+Endif
+Return
+*/

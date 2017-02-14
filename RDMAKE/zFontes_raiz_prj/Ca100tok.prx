@@ -1,0 +1,45 @@
+#include "rwmake.ch"        // incluido pelo assistente de conversao do AP5 IDE em 25-04-01
+
+User Function Ca100tok()        // incluido pelo assistente de conversao do AP5 IDE em 25-04-01
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Declaracao de variaveis utilizadas no programa atraves da funcao    ³
+//³ SetPrvt, que criara somente as variaveis definidas pelo usuario,    ³
+//³ identificando as variaveis publicas do sistema utilizadas no codigo ³
+//³ Incluido pelo assistente de conversao do AP5 IDE                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+SetPrvt("_CNAME,")
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡„o    ³ CA100TOK ³ Autor ³ Alexandre Schmidt     ³ Data ³ 24/05/99 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³ Ponto de entrada utilizado verificar os Debitos e Creditos ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Especifico Select e Iate                                   ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+_cName:=Funname()
+
+if subst(_cName,1,7) <> "GPEM110" .and. subst(_cName,1,7) <> "CONA260"
+
+   IF (PARAMIXB[1]) #(PARAMIXB[2]) .AND. subst(_cName,1,7)<>"FINA200"
+      MSGBOX("Debito e Credito NAO CONFEREM!!!")
+// Substituido pelo assistente de conversao do AP5 IDE em 25-04-01 ==>       __RETURN(.F.)
+Return(.F.)        // incluido pelo assistente de conversao do AP5 IDE em 25-04-01
+   ENDIF
+
+   IF (PARAMIXB[1]) #(PARAMIXB[2]) .AND. subst(_cName,1,7)=="FINA200"
+      MSGBOX("Debito e Credito NAO CONFEREM","ATENCAO")
+// Substituido pelo assistente de conversao do AP5 IDE em 25-04-01 ==>       __RETURN(.T.)
+Return(.T.)        // incluido pelo assistente de conversao do AP5 IDE em 25-04-01
+   ENDIF
+ELSE
+// Substituido pelo assistente de conversao do AP5 IDE em 25-04-01 ==>    __RETURN(.T.)  
+Return(.T.)          // incluido pelo assistente de conversao do AP5 IDE em 25-04-01
+ENDIF
