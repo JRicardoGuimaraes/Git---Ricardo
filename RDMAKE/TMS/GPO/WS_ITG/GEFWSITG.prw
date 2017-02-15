@@ -716,9 +716,9 @@ Else
 	
 	For x := 1 to Len(_aLog)
 		_cMsg += '	<tr>' + CRLF
-		_cMsg += '		<td>' + cValtoChar(_aLog[x,2]) + '</td>' + CRLF
-		_cMsg += '		<td>' + cValtoChar(_aLog[x,3]) + '</td>' + CRLF
-		_cMsg += '		<td>' + cValtoChar(_aLog[x,1]) + '</td>' + CRLF
+		_cMsg += '		<td align="center" bgcolor="Blue" >'		+ cValtoChar(_aLog[x,2]) + '</td>' + CRLF
+		_cMsg += '		<td align="center" valign="center" >' 	+ cValtoChar(_aLog[x,3]) + '</td>' + CRLF
+		_cMsg += '		<td align="center" >' 					+ cValtoChar(_aLog[x,1]) + '</td>' + CRLF
 		_cMsg += '	</tr>' + CRLF
 	Next x
 	
