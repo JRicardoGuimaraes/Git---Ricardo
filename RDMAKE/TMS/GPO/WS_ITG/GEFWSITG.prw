@@ -50,6 +50,10 @@ Local _cUserName	:= GetNewPar("ES_ITGUSER",'valeria.vasconcelos')
 Local _cPassWord	:= GetNewPar("ES_ITGPASS",'4h8dk983sxy987shkl85ffsw')
 Local _cWSDL		:= GetNewPar("ES_ITGWSDL",'http://www.vitgbrasil.com.br:80/vedi/vitgrfqws?wsdl')
 Local _aRecNo		:= {}
+Local _aLog			:= {}
+Local _cAST			:= ''
+Local _cViagem		:= ''
+Local _cDatColeta	:= ''
 
 AFill(_aColeta,'')
 
@@ -64,68 +68,83 @@ oWsdl := TWsdlManager():New()
 // Faz o parse de uma URL
 xRet := oWsdl:ParseURL( _cWSDL ) // "http://www.vitgbrasil.com.br:80/vedi/vitgrfqws?wsdl"
 
-If xRet == .F.
-	conout( "Erro: " + oWsdl:cError )
-	Return
+Begin Sequence
+	If xRet == .F.
+		conout( "Erro: " + oWsdl:cError )
+		AADD(_aLog)
+		BREAK
+	EndIf
+	
+	If lSchedule
+		RpcSetType( 3 )
+		RpcSetEnv( cRpcEmp,cRpcFil,/*cEnvUser*/,/*cEnvPass*/,cEnvMod,cFunName,/*aTables*/,/*lShowFinal*/,/*lAbend*/,/*lOpenSX*/,/*lConnect*/ )
+	EndIf
+	
+	 aOps := oWsdl:ListOperations()
+	
+	If Len( aOps ) == 0
+		conout( "Erro: " + oWsdl:cError )
+		AADD(_aLog)
+		BREAK		
+	EndIf
+	
+	varinfo( "", aOps )
+	
+	// Define a operação
+	
+	If _cTipoOper == "I"
+		// xRet := oWsdl:SetOperation( "importRfQInfo" )
+		xRet := oWsdl:SetOperation( "importRfQAuthInfoArray" )	
+	ElseIf	_cTipoOper == "E"
+		xRet := oWsdl:SetOperation( "exportRfQAuthInfo" )
+		// xRet := oWsdl:SetOperation( aOps[1][1] )
+	EndIf	
+	
+	If xRet == .F.
+		conout( "Erro: " + oWsdl:cError )
+		AADD(_aLog)
+		BREAK
+	EndIf
+	
+	aComplex := oWsdl:NextComplex()
+	
+	varinfo( "", aComplex )
+	
+	aDados := oWsdl:SimpleInput()
+	
+	varinfo( "", aDados )
+	
+	//				oWsdl:AddHttpHeader( "Username", "valeria.vasconcelos" )
+	//				oWsdl:AddHttpHeader( "Password", "4h8dk983sxy987shkl85ffsw" )
+	
+	xRet := oWsdl:SetValueS( aDados[userName][1], {_cUserName} )
+	If xRet == .F.
+		conout( "Erro: " + oWsdl:cError )
+		AADD(_aLog)
+		BREAK
+	EndIf
+	
+	xRet := oWsdl:SetValueS( aDados[password][1], {_cPassWord} )
+	If xRet == .F.
+		conout( "Erro: " + oWsdl:cError )
+		AADD(_aLog)
+		BREAK
+	EndIf
+	
+	xRet := oWsdl:SetValueS( aDados[orgCode][1], {'60014'} )
+	If xRet == .F.
+		conout( "Erro: " + oWsdl:cError )
+		AADD(_aLog)
+		BREAK
+	EndIf
+End Sequence
+
+If !xRet
+ 	fEnvLog(_aLog,1)
+ 	Return
 EndIf
 
-If lSchedule
-	RpcSetType( 3 )
-	RpcSetEnv( cRpcEmp,cRpcFil,/*cEnvUser*/,/*cEnvPass*/,cEnvMod,cFunName,/*aTables*/,/*lShowFinal*/,/*lAbend*/,/*lOpenSX*/,/*lConnect*/ )
-EndIf
-
- aOps := oWsdl:ListOperations()
-
-If Len( aOps ) == 0
-	conout( "Erro: " + oWsdl:cError )
-	Return
-EndIf
-
-varinfo( "", aOps )
-
-// Define a operação
-
-If _cTipoOper == "I"
-	// xRet := oWsdl:SetOperation( "importRfQInfo" )
-	xRet := oWsdl:SetOperation( "importRfQAuthInfoArray" )	
-ElseIf	_cTipoOper == "E"
-	xRet := oWsdl:SetOperation( "exportRfQAuthInfo" )
-	// xRet := oWsdl:SetOperation( aOps[1][1] )
-EndIf	
-
-If xRet == .F.
-	conout( "Erro: " + oWsdl:cError )
-	Return
-EndIf
-
-aComplex := oWsdl:NextComplex()
-
-varinfo( "", aComplex )
-
-aDados := oWsdl:SimpleInput()
-
-varinfo( "", aDados )
-
-//				oWsdl:AddHttpHeader( "Username", "valeria.vasconcelos" )
-//				oWsdl:AddHttpHeader( "Password", "4h8dk983sxy987shkl85ffsw" )
-
-xRet := oWsdl:SetValueS( aDados[userName][1], {_cUserName} )
-If xRet == .F.
-	conout( "Erro: " + oWsdl:cError )
-	Return Nil
-EndIf
-
-xRet := oWsdl:SetValueS( aDados[password][1], {_cPassWord} )
-If xRet == .F.
-	conout( "Erro: " + oWsdl:cError )
-	Return Nil
-EndIf
-
-xRet := oWsdl:SetValueS( aDados[orgCode][1], {'60014'} )
-If xRet == .F.
-	conout( "Erro: " + oWsdl:cError )
-	Return Nil
-EndIf
+_aLog := {}
 
 If _cTipoOper == "I"
 // Define o valor de cada parâmeto necessário
@@ -134,6 +153,7 @@ If _cTipoOper == "I"
 	// Busca viagem para enviar para o Portal
 	If fBuscaDados('I')
 
+
 		While !((TRAB)->(Eof()))
 	
 			Begin Sequence
@@ -141,6 +161,7 @@ If _cTipoOper == "I"
 				xRet := oWsdl:SetValueS( aDados[referenceNumber][1], { AllTrim((TRAB)->(DTQ_AS)) + IIF(Empty(AllTrim((TRAB)->ZA6_PEDCLI)),'','-' + AllTrim((TRAB)->ZA6_PEDCLI))} )
 				If xRet == .F.
 					conout( "Erro: " + oWsdl:cError )
+					AADD(_aLog, { "Erro: " + oWsdl:cError, AllTrim((TRAB)->(DTQ_AS)), AllTrim((TRAB)->DTQ_VIAGEM) })
 					Break
 				EndIf
 
@@ -148,42 +169,49 @@ If _cTipoOper == "I"
 				xRet := oWsdl:SetValueS( aDados[creationDate][1],  {xFormata("creationDate")} ) // 2016-12-28T15:30:00 
 				If xRet == .F.
 					conout( "Erro: " + oWsdl:cError )
+					AADD(_aLog, { "Erro: " + oWsdl:cError, AllTrim((TRAB)->(DTQ_AS)), AllTrim((TRAB)->DTQ_VIAGEM) })
 					Break
 				EndIf
 				
 				xRet := oWsdl:SetValueS( aDados[vehicleType][1], {xFormata("vehicleType")} ) // Tipo de Veiculo
 				If xRet == .F.
 					conout( "Erro: " + oWsdl:cError )
+					AADD(_aLog, { "Erro: " + oWsdl:cError, AllTrim((TRAB)->(DTQ_AS)), AllTrim((TRAB)->DTQ_VIAGEM) })
 					Break
 				EndIf
 				
 				xRet := oWsdl:SetValueS( aDados[totalFee][1], {xFormata('totalFee')} ) // Pedágio total
 				If xRet == .F.
 					conout( "Erro: " + oWsdl:cError )
+					AADD(_aLog, { "Erro: " + oWsdl:cError, AllTrim((TRAB)->(DTQ_AS)), AllTrim((TRAB)->DTQ_VIAGEM) })
 					Break
 				EndIf
 
 				xRet := oWsdl:SetValueS( aDados[tripNumber][1], {AllTrim((TRAB)->DTQ_VIAGEM)} )
 				If xRet == .F.
 					conout( "Erro: " + oWsdl:cError )
+					AADD(_aLog, { "Erro: " + oWsdl:cError, AllTrim((TRAB)->(DTQ_AS)), AllTrim((TRAB)->DTQ_VIAGEM) })
 					Break
 				EndIf
 
-				_aColeta := xFormata('Colecao')
+				_aColeta 	:= xFormata('Colecao')
+				_cDatColeta	:= _aColeta[4] 
 						
 				xRet := oWsdl:SetValueS( aDados[kmTotal][1], {_aColeta[1]} )
 				If xRet == .F.
 					conout( "Erro: " + oWsdl:cError )
+					AADD(_aLog, { "Erro: " + oWsdl:cError, AllTrim((TRAB)->(DTQ_AS)), AllTrim((TRAB)->DTQ_VIAGEM) })
 					Break
 				EndIf
 
-				_cAS := (TRAB)->(DTQ_AS)
+				_cAS 		:= (TRAB)->(DTQ_AS)
+				_cViagem 	:= (TRAB)->(DTQ_VIAGEM)
+				
 				While !((TRAB)->(Eof())) .AND. (TRAB)->(DTQ_AS) == _cAS  
 
 					AADD(_aCNPJSupl, 	_aColeta[2] )
 					AADD(_aColAddress, 	_aColeta[3] )
-					AADD(_aColOutDt,	_aColeta[4] )
-					// AADD(_aColOutDt,		xFormata('collectionOutDate') )	
+					AADD(_aColOutDt,	IIF( Empty(_aColeta[4]),_cDatColeta,_aColeta[4] ) )
 					AADD(_aTarAddress,	_aColeta[5] )
 					AADD(_aExitFee,		xFormata('exitFee') )	
 
@@ -201,30 +229,35 @@ If _cTipoOper == "I"
 				xRet := oWsdl:SetValueS( aDados[cnpjSupplierCollection][1], _aCNPJSupl )
 				If xRet == .F.
 					conout( "Erro: " + oWsdl:cError )
+					AADD(_aLog, { "Erro: " + oWsdl:cError, AllTrim(_cAS), AllTrim(_cViagem) })
 					Break
 				EndIf
 							
 				xRet := oWsdl:SetValueS( aDados[collectionAddress][1], _aColAddress )
 				If xRet == .F.
 					conout( "Erro: " + oWsdl:cError )
+					AADD(_aLog, { "Erro: " + oWsdl:cError, AllTrim(_cAS), AllTrim(_cViagem) })
 					Break
 				EndIf
 							
 				xRet := oWsdl:SetValueS( aDados[collectionOutDate][1], _aColOutDt) // "2016-12-04T16:30:00" 
 				If xRet == .F.
 					conout( "Erro: " + oWsdl:cError )
+					AADD(_aLog, { "Erro: " + oWsdl:cError, AllTrim(_cAS), AllTrim(_cViagem) })
 					Break
 				EndIf
 							
 				xRet := oWsdl:SetValueS( aDados[targetAddress][1], _aTarAddress )
 				If xRet == .F.
 					conout( "Erro: " + oWsdl:cError )
+					AADD(_aLog, { "Erro: " + oWsdl:cError, AllTrim(_cAS), AllTrim(_cViagem) })
 					Break
 				EndIf
 							
 				xRet := oWsdl:SetValueS( aDados[exitFee][1], _aExitFee )  // Pedágio do Trecho
 				If xRet == .F.
 					conout( "Erro: " + oWsdl:cError )
+					AADD(_aLog, { "Erro: " + oWsdl:cError, AllTrim(_cAS), AllTrim(_cViagem) })
 					Break
 				EndIf
 									
@@ -235,11 +268,15 @@ If _cTipoOper == "I"
 //				oWsdl:AddHttpHeader( "Password", "4h8dk983sxy987shkl85ffsw" )
 				
 				// Envia a mensagem SOAP ao servidor
-				
 				xRet := oWsdl:SendSoapMsg()
 				
 				If xRet == .F.
-					conout( "Erro: " + oWsdl:cError )
+					If lSchedule				
+						conout( "Erro: " + oWsdl:cError )
+					Else
+						Alert( "Erro: " + oWsdl:cError )
+					EndIf							
+					AADD(_aLog, { "Erro: " + oWsdl:cError, AllTrim(_cAS), AllTrim(_cViagem) })
 					Break
 				EndIf
 
@@ -253,16 +290,22 @@ If _cTipoOper == "I"
 				oRet 		:= XmlChildEx( oXMLRet:_S_ENVELOPE:_S_BODY:_NS2_ImportRfQAuthInfoArrayResponse,"_RETURN" ) 
 
 				If !Empty(cErro)
-					ConOut('XMLParser: ' + cErro)
+					If lSchedule				
+						ConOut('XMLParser: ' + cErro)
+					Else
+						Alert('XMLParser: ' + cErro)
+					EndIf
+												
+					AADD(_aLog, { "Erro: " + cErro, AllTrim(_cAS), AllTrim(_cViagem) })
 					Break
 				EndIf
 					 								
 				// Se o envio foi bem sucedido, atualizar status da Viagem
 				If  oRet:TEXT == 'success'
 					If lSchedule
-						ConOut('AST ' + AllTrim((TRAB)->DTQ_AS) + ' Enviado com sucesso!')
+						ConOut('AST ' + AllTrim(_cAS) + ' Enviado com sucesso!')
 					Else					
-						ALERT('AST ' + AllTrim((TRAB)->DTQ_AS) + ' Enviado com sucesso!')
+						ALERT('AST ' + AllTrim(_cAS) + ' Enviado com sucesso!')
 					EndIf
 					
 					dbSelectArea('DTQ')
@@ -277,22 +320,27 @@ If _cTipoOper == "I"
 					
 					dbSelectArea((TRAB))
 
+					AADD(_aLog, { "Incluido com sucesso", AllTrim(_cAS), AllTrim(_cViagem) })
+
 				Else
 					If lSchedule
 						ConOut(oRet:TEXT)
 					Else
 						Alert(oRet:TEXT)
-					EndIf	
+					EndIf
+						
+					AADD(_aLog, { "Erro: " + oRet:TEXT, AllTrim(_cAS), AllTrim(_cViagem) })
 				EndIf
 				
 				_aRecNo := {}
 				
-				ConOut("Retorno do WS ITG - AST: " + AllTrim((TRAB)->DTQ_AS) + " ==> " + oRet:TEXT)
-				
-				// Montar Log
+				ConOut("Retorno do WS ITG - AST: " + AllTrim(_cAS) + " ==> " + oRet:TEXT)
 				
 			End Sequence
 		End
+		
+		fEnvLog(_aLog,2)
+				
 	EndIf		
 Else
 	// Exportação
@@ -312,12 +360,14 @@ Else
 				xRet := oWsdl:SetValue( aDados[referenceNumber][1], AllTrim((TRAB)->DTQ_AS) + IIF(Empty((TRAB)->ZA6_PEDCLI),'','-' + AllTrim((TRAB)->ZA6_PEDCLI)) )
 				If xRet == .F.
 					conout( "Erro: " + oWsdl:cError )
+					AADD(_aLog, { "Erro: " + oWsdl:cError, AllTrim((TRAB)->(DTQ_AS)), AllTrim((TRAB)->DTQ_VIAGEM) })
 					Break
 				EndIf
 				
 				xRet := oWsdl:SetValue( aDados[tripNumber][1], AllTrim((TRAB)->DTQ_VIAGEM) )				
 				If xRet == .F.
 					conout( "Erro: " + oWsdl:cError )
+					AADD(_aLog, { "Erro: " + oWsdl:cError, AllTrim((TRAB)->(DTQ_AS)), AllTrim((TRAB)->DTQ_VIAGEM) })					
 					Break
 				EndIf
 				
@@ -336,6 +386,7 @@ Else
 					Else
 						Alert( "Erro: " + oWsdl:cError )
 					EndIf							
+					AADD(_aLog, { "Erro: " + oWsdl:cError, AllTrim((TRAB)->(DTQ_AS)), AllTrim((TRAB)->DTQ_VIAGEM) })
 					Break
 				EndIf
 
@@ -351,6 +402,7 @@ Else
 					Else	
 						Alert('XMLParser: ' + cErro)
 					EndIf						
+					AADD(_aLog, { "XMLParser: " + cErro, AllTrim((TRAB)->(DTQ_AS)), AllTrim((TRAB)->DTQ_VIAGEM) })					
 					Break
 				EndIf
 
@@ -364,11 +416,14 @@ Else
 						Alert("Retornado dados do WS ITG com sucesso - AST: " + AllTrim((TRAB)->DTQ_AS))
 					EndIf
 
+					AADD(_aLog, { "Retornado dados do WS ITG com sucesso", AllTrim((TRAB)->(DTQ_AS)), AllTrim((TRAB)->DTQ_VIAGEM) })
+					
 					// Atualiza base do GPO	com os dados do motorias
 					oRet 		:= XmlChildEx( oXMLRet:_S_ENVELOPE:_S_BODY,"_NS2_EXPORTRFQAUTHINFORESPONSE" )
 
 					If fIntITGGpo(oRet:_NS2_DriverCPF:TEXT, oRet:_NS2_LicensePlate1:TEXT, oRet:_NS2_LicensePlate2:TEXT, oRet:_NS2_transporterCNPJ:TEXT)
 					
+						AADD(_aLog, { "Retornado dados do WS ITG com sucesso", AllTrim((TRAB)->(DTQ_AS)), AllTrim((TRAB)->DTQ_VIAGEM) })					
 					EndIf	
 /*
 					dbSelectArea('DTQ')
@@ -386,7 +441,10 @@ Else
 						ConOut("NÃO Retornado do WS ITG - AST: " + AllTrim((TRAB)->DTQ_AS) + " ==> " + oReturn:TEXT)
 					Else
 						ConOut("NÃO Retornado do WS ITG - AST: " + AllTrim((TRAB)->DTQ_AS) + " ==> " + oReturn:TEXT)
-					EndIf							
+					EndIf
+
+					AADD(_aLog, { "NÃO Retornado do WS ITG: " + oReturn:TEXT, AllTrim((TRAB)->(DTQ_AS)), AllTrim((TRAB)->DTQ_VIAGEM) })												
+
 				EndIf	
 
 				// Montar Log
@@ -395,6 +453,9 @@ Else
 						
 			(TRAB)->(dbSkip())
 		End
+
+		fEnvLog(_aLog,2)
+
 	EndIf			
 	
 EndIf	
@@ -420,7 +481,7 @@ Local _lRet 	:= .F.
 Local _Where	:= ''
 Local _aLastQuery := {}
 Local _cUO		:= ''
-Local _cTpViagem:= GetNewVar(ES_TPVIAG,'M') // M=MILK RUN - 6=FTL - T=LINE WALL
+Local _cTpViagem:= GetNewPar('ES_TPVIAG','M') // M=MILK RUN - 6=FTL - T=LINE WALL
 
 /*
 _cWhere := " And DTC_LOTNFC >= '" + MV_PAR01	+ "' And DTC_LOTNFC <= '" + MV_PAR02 + "' "
@@ -443,8 +504,6 @@ _cWhere += " AND DTQ_STATUS='6'	"
 // INCLUR FILTRO PARA NÃO ENVIAR AQUELES QUE JÁ FORAM ENVIADOS
 //_cWhere += " AND DTQ_XITGDT<>''	"
 
-_cWhere := "%"+_cWhere+"%"
-
 If Select( Trab ) # 0
 	(Trab)->(DbCloseArea())
 EndIf
@@ -454,7 +513,9 @@ If _cTpOper == 'I' // Importação ( Envio para o Portal )
 	// INCLUR FILTRO PARA NÃO ENVIAR AQUELES QUE JÁ FORAM ENVIADOS
 	//_cWhere += " AND DTQ_XITGDT=''	"
 
-	_cWhere += " And ZA6_MODELO IN " + FORMATIN(_cTpViagem,"|")
+//	_cWhere += " And ZA6_MODELO IN " + FORMATIN(_cTpViagem,"|")
+
+	_cWhere := "%"+_cWhere+"%"
 
 	BeginSql Alias Trab
 	
@@ -490,6 +551,8 @@ Else
 	// INCLUR FILTRO PARA IR BUSCAR SOMENTE AQUELES QUE FORAM ENVIADOS E AINDA NÃO RETORNARAM 
 	//_cWhere += " AND DTQ_XITGDT<>''	"
 	//_cWhere += " AND DTQ_XITGDR=''	"	
+
+	_cWhere := "%"+_cWhere+"%"
 		
 	BeginSql Alias Trab
 	
@@ -584,7 +647,7 @@ ElseIf _cTAG == 'Colecao'
 	If Len(_aColAux2) > 0
 		_aColeta[2] := _aColAux2[1] // CNPJ
 		_aColeta[3] := AllTrim(_aColAux2[2]) + ' - ' + AllTrim(_aColAux2[3]) + IIF(!Empty(AllTrim(_aColAux2[3])),' - ','') + AllTrim(_aColAux2[4]) + ' - ' + AllTrim(_aColAux2[5]) + ' - ' + AllTrim(_aColAux2[6])  // END COLETA
-		_aColeta[4] := Transform(DTOS(_aColAux1[6]), '@R 9999-99-99') + 'T' + Transform(_aColAux1[7], '@R 99:99')  + ':00'   // Data e Hora
+		_aColeta[4] := IIF(Empty(_aColAux1[6]),'',Transform(DTOS(_aColAux1[6]), '@R 9999-99-99') + 'T' + Transform(_aColAux1[7], '@R 99:99')  + ':00')   // Data e Hora
 	EndIf
 	
 	_aColAux2 	:= GetAdvFVal('SA1',{'A1_END','A1_COMPLEM','A1_BAIRRO','A1_MUN','A1_EST'},xFilial('SA1') + _aColAux1[3] + _aColAux1[4],1,{}) // Destino
@@ -618,6 +681,55 @@ Alert("CPF: " 	+ _cCPFMot 		+ CRLF +;
 	  "CNPJ: " 	+ _cCNPJTransp 	+ CRLF )
 
 Return .T.
+
+/*/{Protheus.doc} fEnvLog ( Envia Log de Processamento por e-mail)
+@type function fEnvLog(_aLog,_nPart)
+@author u297686 - Ricardo Guimarães
+@since 14/02/2017
+@version 1.0
+@return ${return}, ${return_description}
+@example
+(examples)
+@see (links_or_references)
+/*/static Function fEnvLog(_aLog, _nPart)
+Local _lRet 	:= .t.
+Local _cMail 	:= GetNewPar("ES_ITGLOG", 'jose.guimaraes@gefco.com.br') 
+Local _cMsg		:= ''
+Local _cAssunto	:= ''
+
+// Envia e-mail
+_cAssunto 	:= "Portal de Fornecedores - ITG - Processamento de Viagem "
+_cMsg 		:= ''
+If _nPart == 1
+	_cMsg := ''
+	For x:=1 to Len(_aLog)
+		_cMsg := _aLog[x] + CRLF
+	Next x
+Else
+	_cMsg := '<HTML>' + CRLF
+	_cMsg += '<H1>'   + "Portal de Fornecedores - ITG " + " foi processado em " + DtoC(dDATABASE) + " " + Time() + '</H1>' + CRLF
+	// <H2>TESTE</H1>
+	_cMsg += '<TABLE border="2">' + CRLF
+	_cMsg += '	<th>AST</th>' + CRLF
+	_cMsg += '	<th>Viagem</th>' + CRLF
+	_cMsg += '	<th>Mensagem</th>' + CRLF
+	
+	For x := 1 to Len(_aLog)
+		_cMsg += '	<tr>' + CRLF
+		_cMsg += '		<td>' + cValtoChar(_aLog[x,2]) + '</td>' + CRLF
+		_cMsg += '		<td>' + cValtoChar(_aLog[x,3]) + '</td>' + CRLF
+		_cMsg += '		<td>' + cValtoChar(_aLog[x,1]) + '</td>' + CRLF
+		_cMsg += '	</tr>' + CRLF
+	Next x
+	
+	_cMsg += '</TABLE>' + CRLF
+	_cMsg += '</HTML>' 	+ CRLF
+EndIf	
+
+U_EnvEmail(GETMV("MV_RELFROM"),_cMail,,_cAssunto,_cMsg)
+
+Return _lRet
+
 
 // ---------------------- TESTE
 /*
