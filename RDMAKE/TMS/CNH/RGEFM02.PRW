@@ -2558,6 +2558,7 @@ Local nX       := 0
 Local cCodOco  := ""
 Local lPorVia  := .F.
 Local cFilBkp  := cFilAnt
+Local nQtdDias := GetNewPar('ES_QTDDIAS',15)
 
 Private INCLUI      := .T.
 Private lMsErroAuto := .F.
@@ -2645,14 +2646,32 @@ For nX := 1 to Len(aAlvos)
 	EndIf
 Next nX
 
-//-- Inclusao da Ocorrencia
-SetFunName("TMSA360")
-MsExecAuto({|x,y,z,w| TMSA360(x,y,z,w)}, aCabDUA, aItensDUA, , 3)
-If lMsErroAuto
-	MostraErro()
-EndIf
-SetFunName("RGEFM02")
-lMsErroAuto := .F.
+/************
+Por: Ricardo Guimarães - Em: 16/02/2017 - Solicitado: Flavio Vitório
+Motivo: O operação do FVL tem a necessidade de lançar um ocorrência com data menor que a data da geração da Viagem(DTQ_VIAGEM)
+************/
+Begin Transaction  
+	// ALERT('Plano: ' + cValtoChar(DF0->DF0_PLANID))
+	If AllTrim(DF0->DF0_TRANSP)=='9079' // FVL
+		If (dDatOco < DTQ->DTQ_DATGER) .AND. ((DTQ->DTQ_DATGER - dDatOco) > nQtdDias) 
+			Aviso('Aviso','Não será possível lançar ocorrência com data anterior a ' + DtoC(dDATABASE - nQtdDias), {'Ok'} )
+		Else	
+			DTQ->(RecLock('DTQ',.F.))
+				DTQ->DTQ_DATGER := dDatOCO
+			DTQ->(MSUnLock())
+		EndIf
+	EndIf
+	
+	//-- Inclusao da Ocorrencia
+	SetFunName("TMSA360")
+	MsExecAuto({|x,y,z,w| TMSA360(x,y,z,w)}, aCabDUA, aItensDUA, , 3)
+	If lMsErroAuto
+		MostraErro()
+	EndIf
+	SetFunName("RGEFM02")
+	lMsErroAuto := .F.
+
+End Transaction
 
 cFilAnt := cFilBkp
 
