@@ -30,7 +30,7 @@ STATIC	_cWarning
 /*********************************************/
 /* Processa interface CNH-OTM                */
 /*********************************************/
-User function GEFCNHOTM(_cInterface, _lAuto)
+User function GEFCNHOTM(_cInterface)
 Local _cStatus 	:= ""
 Local _nOpc 		:= 0
 Local _cPlanoId	:= ""
@@ -39,6 +39,8 @@ Local _cRpcFil	:= '01'
 Local _cEnvMod	:= '43'
 Local _cFunName	:= ""
 Local _aTables  	:= {"DF0","DF1","DF2","DF3","DF4","DF5","SA1","DUA","DT5","DUE","DA3","PA7","SX6","SF2"}
+
+Private _lAuto := .T.
 
 _lAuto := xSchedule()  // Verifica se a rotina está sendo executado por schedule
 
@@ -462,7 +464,7 @@ If ! DF0->(dbSeek(xFilial('DF0')+Str(_nPlanoId,TamSX3('DF0_PLANID')[1],0))) // O
 				INTCNHGLOG(_aLog)
 				
 				// Por: Ricardo Guimarães - Em: 19/07/2016 - Verifico se o plano deve ser rejeitada automaticamente
-				If _lFrtNInf
+				If _lFrtNInf .AND. _cUO <> 'FVL'
 					_lRejPlano := .T.
 				EndIf
 				_lPlanoSemErro := .F.			
@@ -475,7 +477,7 @@ If ! DF0->(dbSeek(xFilial('DF0')+Str(_nPlanoId,TamSX3('DF0_PLANID')[1],0))) // O
 				INTCNHGLOG(_aLog)
 				
 				// Por: Ricardo Guimarães - Em: 19/07/2016 - Verifico se o plano deve ser rejeitada automaticamente
-				If _lPdgZero
+				If _lPdgZero .AND. _cUO <> 'FVL'
 					_lRejPlano := .T.
 				EndIf					
 				_lPlanoSemErro := .F.		
@@ -488,7 +490,7 @@ If ! DF0->(dbSeek(xFilial('DF0')+Str(_nPlanoId,TamSX3('DF0_PLANID')[1],0))) // O
 				INTCNHGLOG(_aLog)
 				
 				// Por: Ricardo Guimarães - Em: 19/07/2016 - Verifico se o plano deve ser rejeitada automaticamente
-				If _lPdgNInf
+				If _lPdgNInf .AND. _cUO <> 'FVL'
 					_lRejPlano := .T.
 				EndIf					
 				_lPlanoSemErro := .F.						
@@ -505,7 +507,7 @@ If ! DF0->(dbSeek(xFilial('DF0')+Str(_nPlanoId,TamSX3('DF0_PLANID')[1],0))) // O
 				INTCNHGLOG(_aLog)
 
 				// Por: Ricardo Guimarães - Em: 19/07/2016 - Verifico se o plano deve ser rejeitada automaticamente
-				If _lKmNInf
+				If _lKmNInf .AND. _cUO <> 'FVL'
 					_lRejPlano := .T.
 				EndIf					
 				_lPlanoSemErro := .F.									
@@ -554,7 +556,7 @@ If ! DF0->(dbSeek(xFilial('DF0')+Str(_nPlanoId,TamSX3('DF0_PLANID')[1],0))) // O
 					 _aCliLjOri := fBuscaCliente(_nPlanoID, AllTrim(_aColeta[_nX][2][1]),"ORIGEM") // :_ID_ORIGEM:TEXT
 
 					// Por: Ricardo Guimarães - Em: 19/07/2016 - Verifico se o plano deve ser rejeitada automaticamente
-					If Empty(_aCliLjOri[01]) .and. _lCliOrgNInf
+					If Empty(_aCliLjOri[01]) .and. _lCliOrgNInf .AND. _cUO <> 'FVL'
 						_lRejPlano 		:= .T.
 						_lPlanoSemErro 	:= .F.
 					EndIf														
@@ -589,7 +591,7 @@ If ! DF0->(dbSeek(xFilial('DF0')+Str(_nPlanoId,TamSX3('DF0_PLANID')[1],0))) // O
 					 _aCliLjDes := fBuscaCliente(_nPlanoID,AllTrim(_aColeta[_nX][3][1]),"DESTINO") // :_ID_DESTINO:TEXT
 
 					// Por: Ricardo Guimarães - Em: 19/07/2016 - Verifico se o plano deve ser rejeitada automaticamente
-					If Empty(_aCliLjDes[01]) .and. _lCliDesNInf
+					If Empty(_aCliLjDes[01]) .and. _lCliDesNInf .AND. _cUO <> 'FVL'
 						_lRejPlano := .T.
 					EndIf														
 
@@ -722,7 +724,7 @@ If ! DF0->(dbSeek(xFilial('DF0')+Str(_nPlanoId,TamSX3('DF0_PLANID')[1],0))) // O
 			DF0->(MsUnLock())
 
 			// Por: Ricardo Guimarães - Em: 19/07/2016 - Verifico se o plano deve ser rejeitada automaticamente
-			If 	_lRejPlano
+			If 	_lRejPlano .AND. _cUO <> 'FVL'
 				U_CNHOTM990(_lAuto, _nPlanoId, "D", "R")
 				_lRejPlano := .F.
 			EndIf
@@ -1952,7 +1954,7 @@ If _nHandle == -1
 
    Return .f.
 Else
-	// --- Tratamento de acordo com retorno do Web Service
+	// --- Tratamento de acordo com retorno
 	If _lAuto
 		Iif ( _cStatus=="A", ConOut('Plano de transporte '+AllTrim(Str(_nPlanoId))+' ACEITO !','Aceite - 990'), ConOut('Plano de transporte '+AllTrim(Str(_nPlanoId))+' NÃO ACEITO !','Não Aceite'))
 	Else	
