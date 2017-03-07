@@ -924,6 +924,18 @@ EndIf
 						GDFieldPut('DTC_CODPRO', 'PECAS')
 					EndIf
 
+				// --- Por: Ricardo Guimarães - Em: 06/03/2017 - Objetivo: Para o LPAB(03) forçar PECAS
+					If cFilAnt=='03' .AND. M->DTC_SERVIC $ AllTrim(GETMV('MV_GEF002'))
+						GDFieldPut('DTC_CODPRO', 'PECAS')
+						GDFieldPut('DTC_DESPRO', GetAdvFVal('SB1','B1_DESC',xFilial('SB1')+'PECAS',1,''))
+						/*
+						If ExistTrigger('DTC_CODPRO')
+						// ---	Verifica se existe trigger para este campo
+							RunTrigger(2,N,nil,,'DTC_CODPRO')
+						Endif
+						*/						
+					EndIf
+					
 				//	---	Atualizar objetos
 
 					If UPPER(Alltrim(Funname())) <> "LOCT004"
@@ -953,6 +965,8 @@ EndIf
 				// _lRetorno := .F.
 				EndIf
 			EndIf
+			
+						
 		Else
 	    // _lRetorno := .F.
 //		MsgInfo("NF-e não localizada na tabela(SZ6) de XML.  Favor digitar as informações complementares.","Informação")
