@@ -40,9 +40,9 @@ Private cPerg 	 := PadR("GEFA02",LEN(SX1->X1_GRUPO))
 Private cZCorte1 := GetNewPar('ES_ZCORTE1', 'BR: SP-4|BR: SP-5|BR: Z-NO-NE|BR: Z. SUL|BRASIL: MG-01; BRASIL: MG-02|BRASIL: PR-01|BRASIL: PR-02|BR: Z. CENTRAL')
 Private cZCorte2 := GetNewPar('ES_ZCORTE1', 'BR: RIO - 1|BR: RIO - 2|BR: RIO - 3|BR: RIO - 4|BR: SP-1|BR: SP-2| BR: SP-3|BR: Z. SUDESTE')   
 // Tech Center
-Private cTC		 := GetNewPar('ES_TCenter','A02|DTC|B01|B02|B03')
+Private cTC		 := GetNewPar('ES_TCENTER','A02|DTC|B01|B02|B03')
 // Predio Norte
-Private cPN		 := GetNewPar('ES_PNorte','CCQ|CLM|DOC|EXP|NOV|PNE|ZPI|RES|G02|G03|A01|DPN|G01')
+Private cPN		 := GetNewPar('ES_PNORTE','CCQ|CLM|DOC|EXP|NOV|PNE|ZPI|RES|G02|G03|A01|DPN|G01')
 
 criasx1()
 

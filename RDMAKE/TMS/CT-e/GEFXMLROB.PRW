@@ -1,11 +1,12 @@
 #Include "Protheus.CH"
 
+
 /*
 Programa	: GEFXMLROB
 Funcao		: Usuario GEFXMLROB
 Data		: 31/07/2015
 Autor		: André Costa
-Descricao	: Função de Controle
+Descricao	: Função de contorle
 Chamada	: Schedule / Menu
 Sintaxe	: GEFXMLROB
 */
@@ -14,11 +15,13 @@ Sintaxe	: GEFXMLROB
 User Function GEFXMLROB						// u_GEFXMLROB()
 	Local aArea := GetArea()
 
-	StartJob("u_JobGEFXMLROB" , GetEnvServer() , .F. , 1 )
-	StartJob("u_JobGEFXMLROB" , GetEnvServer() , .F. , 2 )
+	StartJob("U_IniGefXmlRob",GetEnvServer(),.F.,1)
+	StartJob("U_IniGefXmlRob",GetEnvServer(),.F.,2)
 
 	RestArea( aArea )
 Return
+
+
 
 
 /*
@@ -32,25 +35,29 @@ Sintaxe	: GEFXMLROB()
 */
 
 
-User Function JobGEFXMLROB( X )
-	Local aArea			:= GetArea()
-	Local cFunName		:= FunName()
-	Local xIdEnt			:= ''
-	Local xMensagem		:= ''
-	Local cDe				:= ''
-	Local cPara			:= ''
-	Local cCc				:= ''
-	Local cAnexo			:= ''
-	Local cRpcEmp			:= '01'
-	Local cRpcFil			:= '01'
-	Local cEnvMod			:= '43'
-	Local cAssunto		:= 'Log da exportação dos CTe´S para AVERBAÇÃO'
-	Local cMsg				:= 'Segue em anexo o arquivo com as informações do processo de Exportação de XML para AVERBAÇÂO dos CTe´S - '
-	Local aCTE				:= {}
-	Local aQuery			:= {}
-	Local aTipArq			:= {	{"1","199_","Normal" } ,;
-									{"2","200_","Cancelado"	}	;
-								}
+User Function IniGefXmlRob( X , P1 , P2 )
+	Local aArea		:= GetArea()
+	Local cFunName	:= FunName()
+	Local lSchedule	:= xSchedule()
+	Local xIdEnt		:= ''
+	Local xMensagem	:= ''
+	Local cDe			:= ''
+	Local cPara		:= ''
+	Local cCc			:= ''
+	Local cAnexo		:= ''
+	Local cRpcEmp		:= '01'
+	Local cRpcFil		:= '01'
+	Local cEnvMod		:= '43'
+	Local cAssunto	:= 'Log da exportação dos CTe´S para AVERBAÇÃO'
+	Local cMsg			:= 'Segue em anexo o arquivo com as informações do processo de Exportação de XML para AVERBAÇÂO dos CTe´S - '
+	Local aCTE			:= {}
+	Local aQuery		:= {}
+	Local aTipArq		:= {	{"1","199_","Normal" 	} ,	;
+								{"2","200_","Cancelado"	}	;
+							}
+	Local TRAB
+	Local cArquivo
+
 	Local xHoraIni
 	Local xQtde
 	Local xQtdeExp
@@ -59,40 +66,31 @@ User Function JobGEFXMLROB( X )
 	Local _cDirColab
 	Local _cWhere
 
-	Private TRAB			:=	GetNextAlias()
-	Private cArquivo		:= "CTE_"+aTipArq[X][3]+".LOG"
-
-	cAnexo	:= '\SYSTEM\' + cArquivo
-
-	RpcSetType( 3 )
-	RpcSetEnv( cRpcEmp,cRpcFil,/*cEnvUser*/,/*cEnvPass*/,cEnvMod,cFunName,/*aTables*/,/*lShowFinal*/,/*lAbend*/,/*lOpenSX*/,/*lConnect*/ )
+	If lSchedule
+		RpcSetType( 3 )
+		RpcSetEnv( cRpcEmp,cRpcFil,/*cEnvUser*/,/*cEnvPass*/,cEnvMod,cFunName,/*aTables*/,/*lShowFinal*/,/*lAbend*/,/*lOpenSX*/,/*lConnect*/ )
+	EndIf
 
 	AjustaSX6()
 
-	dDataIni		:= GetMv("MV_XDATROB")
-
-	If dDataIni < dDataBase
-		dDataIni := dDataBase - 7
-	EndIf
-
-	dDataFim		:= dDataBase
-
-	cDe				:= GetMv("MV_RELFROM")
-	cPara			:= IIf( xSchedule() , GetMv("MV_XUSRROB") , UsrRetMail( RetCodUsr() ) )
-
-	If Empty( cPara )
-		cPara := "pedro.alvarez@gefco.com.br"
-	EndIf
+	dDataIni	:= DtoS( FirstDate( dDataBase ) - 7 )
+	dDataFim	:= DtoS( LastDate( dDataBase ) )
 
 	_cPatchCopia	:= GetMV("MV_XXMLROB")
 	_cDirColab		:= GetMV("MV_XARQCOL")
 
-	xHoraIni := Time()
+	cArquivo	:= "CTE_"+aTipArq[X][3]+".LOG"
+	cAnexo		:= '\SYSTEM\' + cArquivo
 
-	xMensagem := 'Incio do Processo de Averbacao em ' + DtoC( Date() ) +" às "+ xHoraIni + CRLF
+	xHoraIni	:= Time()
 
 	xQtde		:= 0
 	xQtdeExp	:= 0
+
+	cDe			:= GetMv("MV_RELFROM")
+	cPara		:= IIf( lSchedule , GetMv("MV_XUSRROB") , UsrRetMail( RetCodUsr() ) )
+
+	xMensagem := 'Incio do Processo de Averbacao em ' + DtoC( Date() ) +" as "+ xHoraIni + CRLF
 
 	If Select( "TRAB" ) # 0
 		( TRAB )->( DbCloseArea() )
@@ -100,18 +98,14 @@ User Function JobGEFXMLROB( X )
 
 	TRAB := GetNextAlias()
 
-	StaticCall( GEFCNHAST , LogThis, "Iniciando o processo de Exportação da AVERBAÇÂO dos CTE´S ", cArquivo )
+	StaticCall( GEFCNHAST , LogThis, "Iniciando o processo de Exportação da AVERBAÇÂO do CTE ", cArquivo )
 
 	Begin Sequence
 
-		_cWhere	:= ""
+		_cWhere := " And DT6.D_E_L_E_T_ = ''	"
 
-		If X == 1
-			_cWhere	+= " And	DT6.DT6_XCTERO = ''	"
-			_cWhere	+= " And	DT6.D_E_L_E_T_ = ''	"
-		Else
-			_cWhere	+= " And DT6.DT6_XCTERO = '1'	"
-			_cWhere	+= " And DT6.D_E_L_E_T_ = '*'	"
+		If X # 1
+			_cWhere := " And DT6.D_E_L_E_T_ = '*'	"
 		EndIf
 
 		xMensagem += '	Selecionando Registros de CTe ' + aTipArq[X][3] + CRLF
@@ -125,10 +119,11 @@ User Function JobGEFXMLROB( X )
 			From	%Table:DT6010%	DT6
 
 
-			Where (		DT6.DT6_DATEMI BetWeen %Exp:DtoS(dDataIni)% And %Exp:DtoS(dDataFim)%
+			Where (		DT6.DT6_DATEMI BetWeen %Exp:dDataIni% And %Exp:dDataFim%
+						And DT6.DT6_XCTERO = ''
 						And	DT6.DT6_IDRCTE =	'100'
 						And	DT6.DT6_SERIE	 =	'5'
-						)
+					)
 
 			%Exp:_cWhere%
 
@@ -141,6 +136,7 @@ User Function JobGEFXMLROB( X )
 		( TRAB )->( DbGoTop() )
 
 		If ( TRAB )->( Eof() )
+			xMensagem += '		Nao foram encontrados registros para serem Processados na DT6' + CRLF
 			Break
 		EndIf
 
@@ -152,6 +148,7 @@ User Function JobGEFXMLROB( X )
 
 			lOkCTE := .F.
 			lColab := .F.
+			lCopia	:= .F.
 
 			For Y := 1 To Len( aArqColab )
 
@@ -179,9 +176,11 @@ User Function JobGEFXMLROB( X )
 					Loop
 				EndIf
 
-				xChaveXML := ( TRAB )->( DT6_CHVCTE )+ "_" + DtoS( Date() ) + "_" + StrTran( Time() , ":","" ) + ".XML"
+				lCopia :=  __CopyFile( _cDirColab + aArqColab[Y][1] , _cPatchCopia + aTipArq[X][2] + ( TRAB )->( DT6_CHVCTE )+ ".XML" )
 
-				__CopyFile( _cDirColab + aArqColab[Y][1] , _cPatchCopia + xChaveXML )
+				If ! ( lCopia )
+					xMensagem += "		Problema ao copiar o Arquivo " +  _cDirColab + aArqColab[Y][1] + " para " + _cPatchCopia + aTipArq[X][2] + ( TRAB )->( DT6_CHVCTE )+ ".XML" + CRLF
+				EndIf
 
 				lColab := .T.
 
@@ -204,6 +203,7 @@ User Function JobGEFXMLROB( X )
 					EndIf
 
 					lOkCTE := .T.
+					lCopia := .T.
 
 				End Sequence
 
@@ -211,14 +211,22 @@ User Function JobGEFXMLROB( X )
 
 			If lOkCTE
 
-				cQuery := "Update " + RetSqlName("DT6") + " Set DT6_XCTERO = '" + cValToChar( X ) + "' "
-				cQuery += "WHERE	DT6_FILDOC	= '" + ( TRAB )->( DT6_FILDOC	) + "' "
-				cQuery += "	And	DT6_SERIE	= '" + ( TRAB )->( DT6_SERIE	) + "' "
-				cQuery += "	And	DT6_DOC	= '" + ( TRAB )->( DT6_DOC		) + "' "
+				If lCopia
 
-				TCSqlExec( cQuery )
+					DbSelectArea("DT6")
 
-				xQtdeExp++
+					DT6->( MsSeek( xFilial("DT6") + ( TRAB )->( DT6_FILDOC+DT6_DOC+DT6_SERIE ) ) )
+
+					RecLock("DT6",.F.)
+
+						DT6->DT6_XCTERO	:= cValToChar( X )
+//						DT6->DT6_XCTEDT	:= FWTimeStamp( 2 )
+
+					DT6->( MsUnlock() )
+
+					xQtdeExp++
+
+				EndIf
 
 			EndIf
 
@@ -230,6 +238,10 @@ User Function JobGEFXMLROB( X )
 
 		End While
 
+		If Select( "TRAB" ) # 0
+			( TRAB )->( DbCloseArea() )
+		EndIf
+
 	End Sequence
 
 	xMensagem += "		Foram Processados " + cValToChar( xQtde ) + " registros e Exportados "+ cValToChar( xQtdeExp ) +" arquivos XML'S"+ CRLF
@@ -238,17 +250,19 @@ User Function JobGEFXMLROB( X )
 
 	StaticCall( GEFCNHAST , LogThis, "Foram Processados " + cValToChar( xQtde ) + " registros e Exportados "+ cValToChar( xQtdeExp ) +" arquivos XML'S" , cArquivo )
 
-	StaticCall( GEFCNHAST , LogThis, "Finalizado o processo de Exportação da AVERBAÇÃO dos CTE´S Tempo Decorrido "+ ElapTime( xHoraIni , Time() ) , cArquivo )
+	StaticCall( GEFCNHAST , LogThis, "Finalizado o processo de Exportação da AVERBAÇÃO dos CTE Tempo Decorrido "+ ElapTime( xHoraIni , Time() ) , cArquivo )
 
-	u_EnvEmail( cDe , cPara , cCc , cAssunto, cMsg + aTipArq[X][3] , cAnexo )
+	u_EnvEmail( cDe , cPara , cCc , aTipArq[X][3] + " - " + cAssunto , cMsg , cAnexo )
 
 	FErase( cAnexo )
 
-	xMensagem += 'Fim do Processo de Averbacao em ' + DtoC( Date() ) +" às "+ Time() + " Tempo Decorrido "+ ElapTime( xHoraIni , Time() )+ CRLF
+	xMensagem += 'Fim do Processo de Averbacao em ' + DtoC( Date() ) +" as "+ Time() + " Tempo Decorrido "+ ElapTime( xHoraIni , Time() )+ CRLF
 
 	Conout( xMensagem )
 
-	RpcClearEnv()
+	If lSchedule
+		RpcClearEnv()
+	EndIf
 
 	RestArea( aArea )
 

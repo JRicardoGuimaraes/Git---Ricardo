@@ -2,16 +2,15 @@
 #INCLUDE "TOTVS.CH"
 #INCLUDE "APWEBSRV.CH"
 #INCLUDE "TOPCONN.CH"
-
 /* ===============================================================================
 WSDL Location    http://10.63.249.78:8083/ws/TORNEIOS.apw?WSDL
-Gerado em        02/21/17 16:44:46
+Gerado em        03/07/17 19:02:40
 Observações      Código-Fonte gerado por ADVPL WSDL Client 1.120703
                  Alterações neste arquivo podem causar funcionamento incorreto
                  e serão perdidas caso o código-fonte seja gerado novamente.
 =============================================================================== */
 
-User Function _FTRSQPG ; Return  // "dummy" function - Internal Use 
+User Function _FUTRTKO ; Return  // "dummy" function - Internal Use 
 
 /* -------------------------------------------------------------------------------
 WSDL Service WSTORNEIOS
@@ -29,8 +28,8 @@ WSCLIENT WSTORNEIOS
 	WSDATA   _URL                      AS String
 	WSDATA   _HEADOUT                  AS Array of String
 	WSDATA   _COOKIES                  AS Array of String
-	WSDATA   cPARAMCLI                 AS string
-	WSDATA   cCONSULTACLIRESULT        AS string
+	WSDATA   cCPARAMCLI                AS string
+	WSDATA   oWSCONSULTACLIRESULT      AS TORNEIOS_CLIENTES
 	WSDATA   oWSTORNEIOIN              AS TORNEIOS_TORNEIO
 	WSDATA   nINCLUIRRESULT            AS integer
 
@@ -42,11 +41,12 @@ ENDWSCLIENT
 WSMETHOD NEW WSCLIENT WSTORNEIOS
 ::Init()
 If !FindFunction("XMLCHILDEX")
-	UserException("O Código-Fonte Client atual requer os executáveis do Protheus Build [7.00.131227A-20161027] ou superior. Atualize o Protheus ou gere o Código-Fonte novamente utilizando o Build atual.")
+	UserException("O Código-Fonte Client atual requer os executáveis do Protheus Build [7.00.131227A-20150410] ou superior. Atualize o Protheus ou gere o Código-Fonte novamente utilizando o Build atual.")
 EndIf
 Return Self
 
 WSMETHOD INIT WSCLIENT WSTORNEIOS
+	::oWSCONSULTACLIRESULT := TORNEIOS_CLIENTES():New()
 	::oWSTORNEIOIN       := TORNEIOS_TORNEIO():New()
 
 	// Estruturas mantidas por compatibilidade - NÃO USAR
@@ -54,8 +54,8 @@ WSMETHOD INIT WSCLIENT WSTORNEIOS
 Return
 
 WSMETHOD RESET WSCLIENT WSTORNEIOS
-	::cPARAMCLI          := NIL 
-	::cCONSULTACLIRESULT := NIL 
+	::cCPARAMCLI         := NIL 
+	::oWSCONSULTACLIRESULT := NIL 
 	::oWSTORNEIOIN       := NIL 
 	::nINCLUIRRESULT     := NIL 
 
@@ -67,8 +67,8 @@ Return
 WSMETHOD CLONE WSCLIENT WSTORNEIOS
 Local oClone := WSTORNEIOS():New()
 	oClone:_URL          := ::_URL 
-	oClone:cPARAMCLI     := ::cPARAMCLI
-	oClone:cCONSULTACLIRESULT := ::cCONSULTACLIRESULT
+	oClone:cCPARAMCLI    := ::cCPARAMCLI
+	oClone:oWSCONSULTACLIRESULT :=  IIF(::oWSCONSULTACLIRESULT = NIL , NIL ,::oWSCONSULTACLIRESULT:Clone() )
 	oClone:oWSTORNEIOIN  :=  IIF(::oWSTORNEIOIN = NIL , NIL ,::oWSTORNEIOIN:Clone() )
 	oClone:nINCLUIRRESULT := ::nINCLUIRRESULT
 
@@ -78,13 +78,13 @@ Return oClone
 
 // WSDL Method CONSULTACLI of Service WSTORNEIOS
 
-WSMETHOD CONSULTACLI WSSEND cPARAMCLI WSRECEIVE cCONSULTACLIRESULT WSCLIENT WSTORNEIOS
+WSMETHOD CONSULTACLI WSSEND cCPARAMCLI WSRECEIVE oWSCONSULTACLIRESULT WSCLIENT WSTORNEIOS
 Local cSoap := "" , oXmlRet
 
 BEGIN WSMETHOD
 
 cSoap += '<CONSULTACLI xmlns="http://10.63.249.78:8083/">'
-cSoap += WSSoapValue("PARAMCLI", ::cPARAMCLI, cPARAMCLI , "string", .T. , .F., 0 , NIL, .F.) 
+cSoap += WSSoapValue("CPARAMCLI", ::cCPARAMCLI, cCPARAMCLI , "string", .T. , .F., 0 , NIL, .F.) 
 cSoap += "</CONSULTACLI>"
 
 oXmlRet := SvcSoapCall(	Self,cSoap,; 
@@ -93,7 +93,7 @@ oXmlRet := SvcSoapCall(	Self,cSoap,;
 	"http://10.63.249.78:8083/ws/TORNEIOS.apw")
 
 ::Init()
-::cCONSULTACLIRESULT :=  WSAdvValue( oXmlRet,"_CONSULTACLIRESPONSE:_CONSULTACLIRESULT:TEXT","string",NIL,NIL,NIL,NIL,NIL,NIL) 
+::oWSCONSULTACLIRESULT:SoapRecv( WSAdvValue( oXmlRet,"_CONSULTACLIRESPONSE:_CONSULTACLIRESULT","CLIENTES",NIL,NIL,NIL,NIL,NIL,NIL) )
 
 END WSMETHOD
 
@@ -124,6 +124,39 @@ END WSMETHOD
 oXmlRet := NIL
 Return .T.
 
+
+// WSDL Data Structure CLIENTES
+
+WSSTRUCT TORNEIOS_CLIENTES
+	WSDATA   oWSREGISTROS              AS TORNEIOS_ARRAYOFCLIENTE
+	WSMETHOD NEW
+	WSMETHOD INIT
+	WSMETHOD CLONE
+	WSMETHOD SOAPRECV
+ENDWSSTRUCT
+
+WSMETHOD NEW WSCLIENT TORNEIOS_CLIENTES
+	::Init()
+Return Self
+
+WSMETHOD INIT WSCLIENT TORNEIOS_CLIENTES
+Return
+
+WSMETHOD CLONE WSCLIENT TORNEIOS_CLIENTES
+	Local oClone := TORNEIOS_CLIENTES():NEW()
+	oClone:oWSREGISTROS         := IIF(::oWSREGISTROS = NIL , NIL , ::oWSREGISTROS:Clone() )
+Return oClone
+
+WSMETHOD SOAPRECV WSSEND oResponse WSCLIENT TORNEIOS_CLIENTES
+	Local oNode1
+	::Init()
+	If oResponse = NIL ; Return ; Endif 
+	oNode1 :=  WSAdvValue( oResponse,"_REGISTROS","ARRAYOFCLIENTE",NIL,"Property oWSREGISTROS as s0:ARRAYOFCLIENTE on SOAP Response not found.",NIL,"O",NIL,NIL) 
+	If oNode1 != NIL
+		::oWSREGISTROS := TORNEIOS_ARRAYOFCLIENTE():New()
+		::oWSREGISTROS:SoapRecv(oNode1)
+	EndIf
+Return
 
 // WSDL Data Structure TORNEIO
 
@@ -161,6 +194,47 @@ WSMETHOD SOAPSEND WSCLIENT TORNEIOS_TORNEIO
 	cSoap += WSSoapValue("INICIO", ::dINICIO, ::dINICIO , "date", .T. , .F., 0 , NIL, .F.) 
 Return cSoap
 
+// WSDL Data Structure ARRAYOFCLIENTE
+
+WSSTRUCT TORNEIOS_ARRAYOFCLIENTE
+	WSDATA   oWSCLIENTE                AS TORNEIOS_CLIENTE OPTIONAL
+	WSMETHOD NEW
+	WSMETHOD INIT
+	WSMETHOD CLONE
+	WSMETHOD SOAPRECV
+ENDWSSTRUCT
+
+WSMETHOD NEW WSCLIENT TORNEIOS_ARRAYOFCLIENTE
+	::Init()
+Return Self
+
+WSMETHOD INIT WSCLIENT TORNEIOS_ARRAYOFCLIENTE
+	::oWSCLIENTE           := {} // Array Of  TORNEIOS_CLIENTE():New()
+Return
+
+WSMETHOD CLONE WSCLIENT TORNEIOS_ARRAYOFCLIENTE
+	Local oClone := TORNEIOS_ARRAYOFCLIENTE():NEW()
+	oClone:oWSCLIENTE := NIL
+	If ::oWSCLIENTE <> NIL 
+		oClone:oWSCLIENTE := {}
+		aEval( ::oWSCLIENTE , { |x| aadd( oClone:oWSCLIENTE , x:Clone() ) } )
+	Endif 
+Return oClone
+
+WSMETHOD SOAPRECV WSSEND oResponse WSCLIENT TORNEIOS_ARRAYOFCLIENTE
+	Local nRElem1, oNodes1, nTElem1
+	::Init()
+	If oResponse = NIL ; Return ; Endif 
+	oNodes1 :=  WSAdvValue( oResponse,"_CLIENTE","CLIENTE",{},NIL,.T.,"O",NIL,NIL) 
+	nTElem1 := len(oNodes1)
+	For nRElem1 := 1 to nTElem1 
+		If !WSIsNilNode( oNodes1[nRElem1] )
+			aadd(::oWSCLIENTE , TORNEIOS_CLIENTE():New() )
+			::oWSCLIENTE[len(::oWSCLIENTE)]:SoapRecv(oNodes1[nRElem1])
+		Endif
+	Next
+Return
+
 // WSDL Data Structure ARRAYOFATLETA
 
 WSSTRUCT TORNEIOS_ARRAYOFATLETA
@@ -192,6 +266,46 @@ WSMETHOD SOAPSEND WSCLIENT TORNEIOS_ARRAYOFATLETA
 	Local cSoap := ""
 	aEval( ::oWSATLETA , {|x| cSoap := cSoap  +  WSSoapValue("ATLETA", x , x , "ATLETA", .F. , .F., 0 , NIL, .F.)  } ) 
 Return cSoap
+
+// WSDL Data Structure CLIENTE
+
+WSSTRUCT TORNEIOS_CLIENTE
+	WSDATA   cBAIRRO                   AS string OPTIONAL
+	WSDATA   cENDERECO                 AS string OPTIONAL
+	WSDATA   cESTADO                   AS string OPTIONAL
+	WSDATA   cNOME                     AS string
+	WSDATA   cUF                       AS string OPTIONAL
+	WSMETHOD NEW
+	WSMETHOD INIT
+	WSMETHOD CLONE
+	WSMETHOD SOAPRECV
+ENDWSSTRUCT
+
+WSMETHOD NEW WSCLIENT TORNEIOS_CLIENTE
+	::Init()
+Return Self
+
+WSMETHOD INIT WSCLIENT TORNEIOS_CLIENTE
+Return
+
+WSMETHOD CLONE WSCLIENT TORNEIOS_CLIENTE
+	Local oClone := TORNEIOS_CLIENTE():NEW()
+	oClone:cBAIRRO              := ::cBAIRRO
+	oClone:cENDERECO            := ::cENDERECO
+	oClone:cESTADO              := ::cESTADO
+	oClone:cNOME                := ::cNOME
+	oClone:cUF                  := ::cUF
+Return oClone
+
+WSMETHOD SOAPRECV WSSEND oResponse WSCLIENT TORNEIOS_CLIENTE
+	::Init()
+	If oResponse = NIL ; Return ; Endif 
+	::cBAIRRO            :=  WSAdvValue( oResponse,"_BAIRRO","string",NIL,NIL,NIL,"S",NIL,NIL) 
+	::cENDERECO          :=  WSAdvValue( oResponse,"_ENDERECO","string",NIL,NIL,NIL,"S",NIL,NIL) 
+	::cESTADO            :=  WSAdvValue( oResponse,"_ESTADO","string",NIL,NIL,NIL,"S",NIL,NIL) 
+	::cNOME              :=  WSAdvValue( oResponse,"_NOME","string",NIL,"Property cNOME as s:string on SOAP Response not found.",NIL,"S",NIL,NIL) 
+	::cUF                :=  WSAdvValue( oResponse,"_UF","string",NIL,NIL,NIL,"S",NIL,NIL) 
+Return
 
 // WSDL Data Structure ATLETA
 
@@ -231,6 +345,8 @@ WSMETHOD SOAPSEND WSCLIENT TORNEIOS_ATLETA
 	cSoap += WSSoapValue("NOME", ::cNOME, ::cNOME , "string", .T. , .F., 0 , NIL, .F.) 
 	cSoap += WSSoapValue("PESOKG", ::nPESOKG, ::nPESOKG , "float", .F. , .F., 0 , NIL, .F.) 
 Return cSoap
+
+
 
 
 //-----------------------------------
@@ -313,6 +429,38 @@ Else
  MsgStop(getwscerror(3))
 Endif
 Return
+
+//-----------------------------------
+User Function fWSListaCli()
+Local oWSClient 
+Local oAtleta
+Local oCli
+SET DATE BRITISH
+SET CENTURY ON 
+SET EPOCH TO 1960
+ 
+// Cria a instância da classe Client do WebService de Torneios
+oWSClient := WSTORNEIOS():New()
+
+oWSClient:CCPARAMCLI := 'TESTE'
+
+oCli := oWSClient:ConsultaCli()
+
+For x:=1 to Len(oWSClient:owsconsultacliresult:owsregistros:owscliente)
+	CONOUT('CLIENTE ==> ' + StrZero(x,3))
+	CONOUT(oWSClient:owsconsultacliresult:owsregistros:owscliente[x]:CNOME)
+	CONOUT(oWSClient:owsconsultacliresult:owsregistros:owscliente[x]:CENDERECO)
+	CONOUT(oWSClient:owsconsultacliresult:owsregistros:owscliente[x]:CBAIRRO)
+	CONOUT(oWSClient:owsconsultacliresult:owsregistros:owscliente[x]:CESTADO)
+	CONOUT(oWSClient:owsconsultacliresult:owsregistros:owscliente[x]:CUF)				
+Next x
+/*
+Vamos chamar a inclusao de torneios. para isso, primeiro vemos qual foi o metodo 
+de inclusao gerado na classe client Advpl
+WSMETHOD INCLUIR WSSEND oWSTORNEIOIN WSRECEIVE nINCLUIRRESULT WSCLIENT WSTORNEIOS
+*/
+Return
+
 
 /*----------------------------------------*/
 User Function fTSTSP()
