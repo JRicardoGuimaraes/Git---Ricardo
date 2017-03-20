@@ -1,4 +1,4 @@
-#Include "PROTHEUS.CH"
+#Include "PROTHEUS.CH"			// Teste Commint
 #include "RWMAKE.CH"
 #include "TOPCONN.CH"
 #include "TBICODE.CH"
