@@ -39,6 +39,7 @@ WSSERVICE GEFCO DESCRIPTION "Web Service Gefco"
  WSDATA cParamCli	AS STRING 
  WSDATA cChave		AS STRING
  WSDATA cLogin		AS STRING
+ WSDATA dadoscli	AS Cliente
  
  // Metodos do WebService
  // WSMETHOD Incluir
@@ -47,7 +48,7 @@ WSSERVICE GEFCO DESCRIPTION "Web Service Gefco"
 ENDWSSERVICE
 
 // WSMETHOD ConsultaCli WSRECEIVE cParamCli 		WSSEND aRetCli WSSERVICE TORNEIOS
-WSMETHOD ConsultaCli WSRECEIVE cParamCli, cChave, cLogin WSSEND aRetCli /*_dados*/ WSSERVICE GEFCO
+WSMETHOD ConsultaCli WSRECEIVE cParamCli, cChave, cLogin WSSEND /*dadoscli*/ aRetCli /*_dados*/ WSSERVICE GEFCO
 Local oNewCliente
 
 BEGIN SEQUENCE 
@@ -119,6 +120,7 @@ BEGIN SEQUENCE
 	oNewCliente:UF 			:= AllTrim(SA1->A1_EST)
 	AADD(::_dados:Registros, oNewCliente)
 	
+	::dadoscli := oNewCliente
 	// AADD(::aRetCli, oNewCliente)	
 	
 	::_Status := 'Cliente localizado'
