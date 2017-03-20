@@ -906,7 +906,7 @@ Retorno	: Logico
 
 
 Static Function VldDiretorio
-	Local lRetorno	:= .F.
+	Local lRetorno	:= .T.
 
 	Begin Sequence
 
@@ -914,12 +914,13 @@ Static Function VldDiretorio
 			Break
 		EndIf
 
-		If !lIsDir( Alltrim( MV_PAR01 ) )
-			Aviso("Atenção","Diretorio Invalido.",{"OK"})
+		If lIsDir( Alltrim( MV_PAR01 ) )
 			Break
 		EndIf
 
-		lRetorno := .T.
+		Aviso("Atenção","Diretorio Invalido.",{"OK"})
+
+		lRetorno := .F.
 
 	End Sequence
 

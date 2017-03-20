@@ -192,7 +192,8 @@ Static Function Model
 		oExcel:AddColumn(cSheet,cTitulo,'Cliente'				, nAlign01, nFormat01, lTotal02 )
 		oExcel:AddColumn(cSheet,cTitulo,'Cod Fornecedor'		, nAlign01, nFormat01, lTotal02 )
 		oExcel:AddColumn(cSheet,cTitulo,'Loja Fornecedor'	, nAlign01, nFormat01, lTotal02 )
-		oExcel:AddColumn(cSheet,cTitulo,'Nome Fornecedor'	, nAlign01, nFormat01, lTotal02 )
+		oExcel:AddColumn(cSheet,cTitulo,'Razao Social'		, nAlign01, nFormat01, lTotal02 )
+		oExcel:AddColumn(cSheet,cTitulo,'Nome Fantasia'		, nAlign01, nFormat01, lTotal02 )
 		oExcel:AddColumn(cSheet,cTitulo,'Inicio Vigencia'	, nAlign01, nFormat04, lTotal02 )
 		oExcel:AddColumn(cSheet,cTitulo,'Fim Vigencia'		, nAlign01, nFormat04, lTotal02 )
 		oExcel:AddColumn(cSheet,cTitulo,'Tipo da Tabela'		, nAlign01, nFormat01, lTotal02 )
@@ -209,7 +210,7 @@ Static Function Model
 			oExcel:AddColumn(cSheet,cTitulo,'Municipio'			, nAlign01, nFormat01, lTotal02 )
 			oExcel:AddColumn(cSheet,cTitulo,'Descrição do Mun.'	, nAlign01, nFormat01, lTotal02 )
 			oExcel:AddColumn(cSheet,cTitulo,'UF'					, nAlign01, nFormat01, lTotal02 )
-			oExcel:AddColumn(cSheet,cTitulo,'Custo Coleta'		, nAlign03, nFormat03, lTotal02 )
+			oExcel:AddColumn(cSheet,cTitulo,'Custo do Frete'		, nAlign03, nFormat03, lTotal02 )
 
 		ElseIf MV_PAR10 == 2
 			oExcel:AddColumn(cSheet,cTitulo,'Faixa de KM de'		, nAlign03, nFormat02, lTotal02 )
@@ -264,7 +265,8 @@ Static Function Model
 							( TrabQuery )->ZT1_NOMCLI			,	;
 							( TrabQuery )->ZT1_CODFOR			,	;
 							( TrabQuery )->ZT1_LOJFOR			,	;
-							( TrabQuery )->ZT1_NOMFOR 			,	;
+							( TrabQuery )->A2_NOME	 			,	;
+							( TrabQuery )->A2_NREDUZ	 			,	;
 							StoD( ( TrabQuery )->ZT1_INIVIG )	,	;
 							StoD( ( TrabQuery )->ZT1_FIMVIG	 )	,	;
 							xZT1_TIPTAB 							,	;
@@ -285,7 +287,7 @@ Static Function Model
 				aArrayAux	:= {	( TrabQuery )->ZTB_CODMUN	,;
 									( TrabQuery )->ZTB_MUNICI	,;
 									( TrabQuery )->ZTB_UF		,;
-									( TrabQuery )->ZTB_CUSTO 	 ;
+									( TrabQuery )->ZT1_CUSTO 	 ;
 								}
 
 			ElseIf MV_PAR10 == 2
@@ -369,55 +371,55 @@ Static Function BuildQuery
 			( DbTrab )->( DbCloseArea() )
 		EndIf
 
-		If ( ValType( MV_PAR07 ) == 'N' ) // MV_PAR07 == 1
-			cWhere	+= " And GetDate() BetWeen ZT1_INIVIG And ZT1_FIMVIG "
+		If  ! ( xWhenData() )
+			cWhere	+= " And GetDate() BetWeen ZT1.ZT1_INIVIG And ZT1.ZT1_FIMVIG "
 		Else
-			cWhere	+= " And ZT1_INIVIG >= '" +  DtoS( MV_PAR08 ) + "'"
-			cWhere	+= " And ZT1_FIMVIG <= '" +  DtoS( MV_PAR09 ) + "'"
+			cWhere	+= " And ZT1.ZT1_INIVIG >= '" +  DtoS( MV_PAR08 ) + "'"
+			cWhere	+= " And ZT1.ZT1_FIMVIG <= '" +  DtoS( MV_PAR09 ) + "'"
 		EndIf
 
 		Do Case
 			Case MV_PAR10 == 1
 
-				cSelect	+= "ZTB_CODMUN,ZTB_MUNICI,ZTB_UF,ZTB_CUSTO"
+				cSelect	+= ",ZTB_CODMUN,ZTB_MUNICI,ZTB_UF"
 
 				cFrom		+= RetSqlName( "ZTB" ) + " ZTB "
 
-				cWhere		+= " And ZT1_CODTAB = ZTB_TABCOM "
-				cWhere		+= " And ZT1_VERTAB = ZTB_VERTAB "
-				cWhere 	+= " And ZT1_ITEMTB = ZTB_ITTABC "
+				cWhere		+= " And ZT1.ZT1_CODTAB = ZTB.ZTB_TABCOM "
+				cWhere		+= " And ZT1.ZT1_VERTAB = ZTB.ZTB_VERTAB "
+				cWhere 	+= " And ZT1.ZT1_ITEMTB = ZTB.ZTB_ITTABC "
 
 				cWhere 	+= " And ZTB.D_E_L_E_T_= ' ' "
 
 			Case MV_PAR10 == 2
 
-				cSelect 	+= "ZTD_FAIXAD,ZTD_FAIXAA,ZTD_VRFIXO,ZTD_VRFIXR,ZTD_VRKMON,ZTD_VRKMRO "
+				cSelect 	+= ",ZTD_FAIXAD,ZTD_FAIXAA,ZTD_VRFIXO,ZTD_VRFIXR,ZTD_VRKMON,ZTD_VRKMRO "
 
 				cFrom		+= RetSqlName( "ZTD" ) + " ZTD "
 
-				cWhere 	+= " And ZT1_CODTAB = ZTD_TABCOM "
-				cWhere 	+= " And ZT1_VERTAB = ZTD_VERCOM "
-				cWhere 	+= " And ZT1_ITEMTB = ZTD_ITTABC "
+				cWhere 	+= " And ZT1.ZT1_CODTAB = ZTD.ZTD_TABCOM "
+				cWhere 	+= " And ZT1.ZT1_VERTAB = ZTD.ZTD_VERCOM "
+				cWhere 	+= " And ZT1.ZT1_ITEMTB = ZTD.ZTD_ITTABC "
 
 				cWhere 	+= " And ZTD.D_E_L_E_T_= ' ' "
 
 			Case MV_PAR10 == 3
-				cSelect 	+= "ZTF_TABCOM,ZTF_VERCOM,ZTF_ITTABC,ZTF_ITEM,ZTF_DIASEM,ZTF_HRINI,ZTF_HRFIM, "
-				cSelect 	+= "ZTF_HRFRAN,ZTF_VALKM,ZTF_VALKMA,ZTF_VALHRA,ZTF_LIMHRC,ZTF_VALDIA"
+				cSelect 	+= ",ZTF_TABCOM,ZTF_VERCOM,ZTF_ITTABC,ZTF_ITEM,ZTF_DIASEM,ZTF_HRINI,ZTF_HRFIM "
+				cSelect 	+= ",ZTF_HRFRAN,ZTF_VALKM,ZTF_VALKMA,ZTF_VALHRA,ZTF_LIMHRC,ZTF_VALDIA"
 
 				cFrom		+= RetSqlName( "ZTF" ) + " ZTF "
 
-				cWhere 	+= " And ZT1_CODTAB = ZTF_TABCOM "
-				cWhere 	+= " And ZT1_VERTAB = ZTF_VERCOM "
-				cWhere 	+= " And ZT1_ITEMTB = ZTF_ITTABC "
+				cWhere 	+= " And ZT1.ZT1_CODTAB = ZTF.ZTF_TABCOM "
+				cWhere 	+= " And ZT1.ZT1_VERTAB = ZTF.ZTF_VERCOM "
+				cWhere 	+= " And ZT1.ZT1_ITEMTB = ZTF.ZTF_ITTABC "
 
 				cWhere 	+= " And ZTF.D_E_L_E_T_= ' ' "
 
 		End Case
 
 		If	! Empty( MV_PAR05 )
-			cWhere 	+= " And ZT1_CODFOR = '" + MV_PAR05 + "' "
-			cWhere 	+= " And ZT1_LOJFOR = '" + MV_PAR06 + "' "
+			cWhere 	+= " And ZT1.ZT1_CODFOR = '" + MV_PAR05 + "' "
+			cWhere 	+= " And ZT1.ZT1_LOJFOR = '" + MV_PAR06 + "' "
 		EndIf
 
 		cSelect	:= "%" + cSelect	+ "%"
@@ -427,23 +429,26 @@ Static Function BuildQuery
 
 		BeginSql Alias TrabQuery
 
-			Select	ZT1_CODFOR,ZT1_LOJFOR,ZT1_NOMFOR,ZT1_CODCLI,ZT1_LOJCLI,ZT1_NOMCLI,
+			Select	ZT1_CODFOR,ZT1_LOJFOR,A2_NOME,A2_NREDUZ,ZT1_CODCLI,ZT1_LOJCLI,ZT1_NOMCLI,
 					ZT1_INIVIG,ZT1_FIMVIG,ZT1_TIPTAB,ZT1_VERTAB,ZT1_TIPFLU,ZT1_MUNORI,
-					ZT1_UFORI,ZT1_MUNDES,ZT1_UFDES,ZT1_DESCIT,ZT1_VEICUL,
+					ZT1_UFORI,ZT1_MUNDES,ZT1_UFDES,ZT1_DESCIT,ZT1_VEICUL,ZT1_CUSTO
 
 					%Exp:cSelect%
 
 			From	%Table:ZT1% ZT1,
+					%Table:SA2% SA2,
 					%Exp:cFrom%
 
 			Where (		ZT1.%NotDel%
-						And	ZT1_CODCLI = %Exp:MV_PAR03%
-						And	ZT1_LOJCLI = %Exp:MV_PAR04%
+						And	ZT1.ZT1_CODCLI = %Exp:MV_PAR03%
+						And	ZT1.ZT1_LOJCLI = %Exp:MV_PAR04%
+						And	ZT1.ZT1_CODFOR = SA2.A2_COD
+						And	ZT1.ZT1_LOJFOR = SA2.A2_LOJA
 					)
 
 					%Exp:cWhere%
 
-			Order By ZT1_CODFOR,ZT1_VEICUL
+			Order By ZT1.ZT1_CODFOR,ZT1.ZT1_VEICUL
 
 		EndSql
 
@@ -496,7 +501,7 @@ Static Function AjustaParam
 		EndIf
 	Next X
 
-	Aadd(aParamBox,{6,"Diretorio"		,cDiretorio			,"@!"	,"StaticCall(GEFR022,VldDiretorio)","",50,.T.,"XML (*.XML) |*.XML","U:",GETF_NETWORKDRIVE+GETF_LOCALHARD+GETF_RETDIRECTORY } )
+	Aadd(aParamBox,{6,"Diretorio"		,cDiretorio			,"@!"	,"StaticCall(GEFR022,VldDiretorio)","",50,.T.,"XML (*.XML) |*.XML","C:",GETF_NETWORKDRIVE+GETF_LOCALHARD+GETF_RETDIRECTORY } )
 	aAdd(aParamBox,{1,"Arquivo"			,PadR("RELTAB",50)	,"@!"	,"StaticCall(GEFR022,VldArquivo)" ,"","",50,.T.})
 
 	aAdd(aParamBox,{1,"Cliente"			,Space(GetSx3Cache("ZT1_CODCLI","X3_TAMANHO")),"@!","","SA1","",50,.T.})
@@ -506,8 +511,8 @@ Static Function AjustaParam
 
 	aAdd(aParamBox,{2,"Tabelas"			,1,aCombo,50,"",.T.})
 
-	aAdd(aParamBox,{1,"Data Inicial"	,Ctod(Space(8)),"","","","!( ValType( MV_PAR07 ) == 'N' )",50,.F.})
-	aAdd(aParamBox,{1,"Data Final"		,Ctod(Space(8)),"","StaticCall(GEFRELZT1,VldDataFim,MV_PAR08,MV_PAR09)"	,"","!( ValType( MV_PAR07 ) == 'N' )",50,.F.})
+	aAdd(aParamBox,{1,"Data Inicial"	,Ctod(Space(8)),"","","","StaticCall(GEFRELZT1,xWhenData)",50,.F.})
+	aAdd(aParamBox,{1,"Data Final"		,Ctod(Space(8)),"","StaticCall(GEFRELZT1,VldDataFim,MV_PAR08,MV_PAR09)"	,"","StaticCall(GEFRELZT1,xWhenData)",50,.F.})
 
 	aAdd(aParamBox,{3,"Tipo do Relatorio",1,aRadio,50,"",.T.})
 
@@ -519,6 +524,19 @@ Static Function AjustaParam
 	Endif
 
 Return( lRetorno )
+
+Static Function xWhenData
+	Local aArea	 := GetArea()
+	Local lRetorno := .T.
+
+	If ValType( MV_PAR07 ) == 'N' .Or. SubStr(MV_PAR07,1,1) == "V"
+		lRetorno := .F.
+	EndIf
+
+	RestArea( aArea )
+Return( lRetorno )
+
+
 
 /*
 Programa    : GEFRELZT1
