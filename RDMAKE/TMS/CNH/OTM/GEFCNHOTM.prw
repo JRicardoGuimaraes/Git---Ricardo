@@ -1932,11 +1932,11 @@ DEFAULT _lAuto 	:= .F.
 // ---	Prepara XML para envio
 _cXML	:=	'<?xml version="1.0" encoding="UTF-8"?>'
 _cXML	+=	'<CAB_990 xmlns:xsd="http://www.w3.org/2001/XMLSchema">'
-_cXML	+=	'	<COD_CAR> '      + AllTrim(DF0->DF0_TRANSP) + '</COD_CAR>'
-_cXML	+=	'	<REF_SOLIC> '    + AllTrim(DF0->DF0_REFSOL) + '</REF_SOLIC>'
-_cXML	+=	'	<FECHA_ACCEPT> ' + TRANSFORM(DTOS(DDATABASE),"@R 9999-99-99") + '</FECHA_ACCEPT>'
-_cXML	+=	'	<ESTATUS_PED> '  + AllTrim(_cStatus) + '</ESTATUS_PED>'
-_cXML	+=	'	<COD_AREA> ' 	 + AllTrim(DF0->DF0_CODARE) + '</COD_AREA>'
+_cXML	+=	'	<COD_CAR>'      + AllTrim(DF0->DF0_TRANSP) + '</COD_CAR>'
+_cXML	+=	'	<REF_SOLIC>'    + AllTrim(DF0->DF0_REFSOL) + '</REF_SOLIC>'
+_cXML	+=	'	<FECHA_ACCEPT>' + TRANSFORM(DTOS(DDATABASE),"@R 9999-99-99") + '</FECHA_ACCEPT>'
+_cXML	+=	'	<ESTATUS_PED>'  + AllTrim(_cStatus) + '</ESTATUS_PED>'
+_cXML	+=	'	<COD_AREA>' 	  + AllTrim(DF0->DF0_CODARE) + '</COD_AREA>'
 _cXML	+=	'</CAB_990>'
 
 // XML com error, não processa e move para a pasta backup
