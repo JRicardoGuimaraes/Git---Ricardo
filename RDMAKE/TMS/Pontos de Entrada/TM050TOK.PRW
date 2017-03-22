@@ -640,40 +640,70 @@ EndIf
 				//³Regra para gatilhar o código e loja do cliente.                                            ³
 				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
 
-					SA1->(dbSetOrder(3))//A1_FILIAL+A1_CGC
-					If SA1->(dbSeek(xFilial("SA1")+SZ6->Z6_CNPJEMI))
-						If !Empty(M->DTC_CLIREM) .And. M->DTC_CLIREM != SA1->A1_COD
-							MsgInfo("Já exite rementente (" + M->(DTC_CLIREM + "/" + DTC_LOJREM) + ") informado no lote diferente do lido pela chave informada.","Informação")
-							_lRetorno := .F.
-							Exit
-						ElseIf !Empty(M->DTC_LOJREM) .And. M->DTC_LOJREM != SA1->A1_LOJA
-							MsgInfo("Já exite rementente (" + M->(DTC_CLIREM + "/" + DTC_LOJREM) + ") informado no lote diferente do lido pela chave informada.","Informação")
-							_lRetorno := .F.
-							Exit
-						Else
-							M->DTC_CLIREM := Iif(SA1->A1_EST == 'EX',Space(TamSX3('A1_COD')[1]),SA1->A1_COD)
-							M->DTC_LOJREM := Iif(SA1->A1_EST == 'EX',Space(TamSX3('A1_LOJA')[1]),SA1->A1_LOJA)
-						EndIf
-					EndIf
-
-				//	--- Somente destinos nacionais
-					If !Empty(SZ6->Z6_CNPJDES)
-						If SA1->(dbSeek(xFilial("SA1")+SZ6->Z6_CNPJDES))
-							If !Empty(M->DTC_CLIDES) .And. M->DTC_CLIDES != SA1->A1_COD
-								MsgInfo("Já exite destinatario (" + M->(DTC_CLIDES + "/" + DTC_LOJDES) + ") informado no lote diferente do lido pela chave informada.","Informação")
+					// Por: ITUP(Guilherme) - Em: 22/03/2017
+					If AtIsRotina("U_LOCT004")
+						SA1->(dbSetOrder(3))//A1_FILIAL+A1_CGC
+						If SA1->(dbSeek(xFilial("SA1")+SZ6->Z6_CNPJEMI))
+							If !Empty(cCodRem) .And. cCodRem != SA1->A1_COD
+								MsgInfo("O rementente (" + AllTrim(cCodRem) + "/" + AllTrim(cLojRem) + ") da viagem é diferente do remetente (" + AllTrim(SA1->A1_COD) + "/" + AllTrim(SA1->A1_LOJA) + ") lido pela chave informada.","Informação")
 								_lRetorno := .F.
 								Exit
-							ElseIf !Empty(M->DTC_LOJDES) .And. M->DTC_LOJDES != SA1->A1_LOJA
-								MsgInfo("Já exite destinatario (" + M->(DTC_CLIDES + "/" + DTC_LOJDES) + ") informado no lote diferente do lido pela chave informada.","Informação")
+							ElseIf !Empty(cLojRem) .And. cLojRem != SA1->A1_LOJA
+								MsgInfo("O rementente (" + AllTrim(cCodRem) + "/" + AllTrim(cLojRem) + ") da viagem é diferente do remetente (" + AllTrim(SA1->A1_COD) + "/" + AllTrim(SA1->A1_LOJA) + ") lido pela chave informada.","Informação")
+								_lRetorno := .F.
+								Exit
+							EndIf
+						EndIf
+	
+					    //	--- Somente destinos nacionais
+						If !Empty(SZ6->Z6_CNPJDES)
+							If SA1->(dbSeek(xFilial("SA1")+SZ6->Z6_CNPJDES))
+								If !Empty(cCodDes) .And. cCodDes != SA1->A1_COD
+									MsgInfo("O destinatario (" + AllTrim(cCodDes) + "/" + AllTrim(cLojDes) + ") da viagem é diferente do destinatario (" + AllTrim(SA1->A1_COD) + "/" + AllTrim(SA1->A1_LOJA) + ") lido pela chave informada.","Informação")
+									_lRetorno := .F.
+									Exit
+								ElseIf !Empty(cLojDes) .And. cLojDes != SA1->A1_LOJA
+									MsgInfo("O destinatario (" + AllTrim(cCodDes) + "/" + AllTrim(cLojDes) + ") da viagem é diferente do destinatario (" + AllTrim(SA1->A1_COD) + "/" + AllTrim(SA1->A1_LOJA) + ") lido pela chave informada.","Informação")
+									_lRetorno := .F.
+									Exit
+								EndIf
+							EndIf
+						EndIf
+	                Else         
+						SA1->(dbSetOrder(3))//A1_FILIAL+A1_CGC
+						If SA1->(dbSeek(xFilial("SA1")+SZ6->Z6_CNPJEMI))
+							If !Empty(M->DTC_CLIREM) .And. M->DTC_CLIREM != SA1->A1_COD
+								MsgInfo("Já exite rementente (" + M->(DTC_CLIREM + "/" + DTC_LOJREM) + ") informado no lote diferente do lido pela chave informada.","Informação")
+								_lRetorno := .F.
+								Exit
+							ElseIf !Empty(M->DTC_LOJREM) .And. M->DTC_LOJREM != SA1->A1_LOJA
+								MsgInfo("Já exite rementente (" + M->(DTC_CLIREM + "/" + DTC_LOJREM) + ") informado no lote diferente do lido pela chave informada.","Informação")
 								_lRetorno := .F.
 								Exit
 							Else
-								M->DTC_CLIDES := Iif(SA1->A1_EST == 'EX',Space(TamSX3('A1_COD')[1]),SA1->A1_COD)
-								M->DTC_LOJDES := Iif(SA1->A1_EST == 'EX',Space(TamSX3('A1_LOJA')[1]),SA1->A1_LOJA)
+								M->DTC_CLIREM := Iif(SA1->A1_EST == 'EX',Space(TamSX3('A1_COD')[1]),SA1->A1_COD)
+								M->DTC_LOJREM := Iif(SA1->A1_EST == 'EX',Space(TamSX3('A1_LOJA')[1]),SA1->A1_LOJA)
 							EndIf
 						EndIf
-					EndIf
-
+	
+					//	--- Somente destinos nacionais
+						If !Empty(SZ6->Z6_CNPJDES)
+							If SA1->(dbSeek(xFilial("SA1")+SZ6->Z6_CNPJDES))
+								If !Empty(M->DTC_CLIDES) .And. M->DTC_CLIDES != SA1->A1_COD
+									MsgInfo("Já exite destinatario (" + M->(DTC_CLIDES + "/" + DTC_LOJDES) + ") informado no lote diferente do lido pela chave informada.","Informação")
+									_lRetorno := .F.
+									Exit
+								ElseIf !Empty(M->DTC_LOJDES) .And. M->DTC_LOJDES != SA1->A1_LOJA
+									MsgInfo("Já exite destinatario (" + M->(DTC_CLIDES + "/" + DTC_LOJDES) + ") informado no lote diferente do lido pela chave informada.","Informação")
+									_lRetorno := .F.
+									Exit
+								Else
+									M->DTC_CLIDES := Iif(SA1->A1_EST == 'EX',Space(TamSX3('A1_COD')[1]),SA1->A1_COD)
+									M->DTC_LOJDES := Iif(SA1->A1_EST == 'EX',Space(TamSX3('A1_LOJA')[1]),SA1->A1_LOJA)
+								EndIf
+							EndIf
+						EndIf
+                    EndIf
 				//	---	Verifica se a solicitação de coleta foi preenchida
 					If 	!Empty(M->DTC_NUMSOL)
 
