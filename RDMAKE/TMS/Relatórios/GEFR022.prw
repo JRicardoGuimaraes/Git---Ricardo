@@ -1,4 +1,4 @@
-#Include "PROTHEUS.CH"			// Teste Commint
+#Include "PROTHEUS.CH"
 #include "RWMAKE.CH"
 #include "TOPCONN.CH"
 #include "TBICODE.CH"
@@ -918,6 +918,8 @@ Static Function VldDiretorio
 			Break
 		EndIf
 
+		MV_PAR01 := Space(100)
+
 		Aviso("Atenção","Diretorio Invalido.",{"OK"})
 
 		lRetorno := .F.
@@ -1078,9 +1080,11 @@ Static Function AjustaParam
 
 	Local cLoad		:= "GEFR022"
 	Local aCombo		:= {"Analitico","Sintetico"}
-	Local cDiretorio	:= PadR(MV_PAR01,20)
+//	Local cDiretorio	:= PadR(MV_PAR01,20)
 
-	Aadd(aParamBox,{6,"Diretorio"		,cDiretorio		,"@!"	,"StaticCall(GEFR022,VldDiretorio)","",50,.F.,"XML (*.XML) |*.XML","U:",GETF_NETWORKDRIVE+GETF_LOCALHARD+GETF_RETDIRECTORY } )
+	MV_PAR01 := Space(100)
+
+	Aadd(aParamBox,{6,"Diretorio"		,MV_PAR01			,"@!"	,"StaticCall(GEFR022,VldDiretorio)","",50,.F.,"XML (*.XML) |*.XML","U:",GETF_NETWORKDRIVE+GETF_LOCALHARD+GETF_RETDIRECTORY } )
 
 	aAdd(aParamBox,{1,"Arquivo"			,PadR("CT-e",50)	,"@!"	,"StaticCall(GEFR022,VldArquivo)"	,"","",50,.F.})
 

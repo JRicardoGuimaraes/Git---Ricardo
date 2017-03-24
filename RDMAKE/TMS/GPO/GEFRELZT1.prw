@@ -207,9 +207,6 @@ Static Function Model
 		oExcel:AddColumn(cSheet,cTitulo,'Veiculo'				, nAlign01, nFormat01, lTotal02 )
 
 		If	MV_PAR10 == 1
-			oExcel:AddColumn(cSheet,cTitulo,'Municipio'			, nAlign01, nFormat01, lTotal02 )
-			oExcel:AddColumn(cSheet,cTitulo,'Descrição do Mun.'	, nAlign01, nFormat01, lTotal02 )
-			oExcel:AddColumn(cSheet,cTitulo,'UF'					, nAlign01, nFormat01, lTotal02 )
 			oExcel:AddColumn(cSheet,cTitulo,'Custo do Frete'		, nAlign03, nFormat03, lTotal02 )
 
 		ElseIf MV_PAR10 == 2
@@ -284,11 +281,9 @@ Static Function Model
 
 			If	MV_PAR10 == 1
 
-				aArrayAux	:= {	( TrabQuery )->ZTB_CODMUN	,;
-									( TrabQuery )->ZTB_MUNICI	,;
-									( TrabQuery )->ZTB_UF		,;
-									( TrabQuery )->ZT1_CUSTO 	 ;
+				aArrayAux	:=	{	( TrabQuery )->ZT1_CUSTO 	 ;
 								}
+
 
 			ElseIf MV_PAR10 == 2
 
@@ -380,16 +375,6 @@ Static Function BuildQuery
 
 		Do Case
 			Case MV_PAR10 == 1
-
-				cSelect	+= ",ZTB_CODMUN,ZTB_MUNICI,ZTB_UF"
-
-				cFrom		+= RetSqlName( "ZTB" ) + " ZTB "
-
-				cWhere		+= " And ZT1.ZT1_CODTAB = ZTB.ZTB_TABCOM "
-				cWhere		+= " And ZT1.ZT1_VERTAB = ZTB.ZTB_VERTAB "
-				cWhere 	+= " And ZT1.ZT1_ITEMTB = ZTB.ZTB_ITTABC "
-
-				cWhere 	+= " And ZTB.D_E_L_E_T_= ' ' "
 
 			Case MV_PAR10 == 2
 
@@ -492,8 +477,9 @@ Static Function AjustaParam
 	Local cLoad		:= "GEFRELZT1"
 	Local aRadio		:= {}
 	Local aAux			:= RetSX3Box(GetSX3Cache("ZT1_TIPREG","X3_CBOX"),,,1)
-	Local cDiretorio	:= Space(100)
 	Local aCombo		:= {"Vigente","Retroativa"}
+
+	MV_PAR01 := Space(100)
 
 	For X := 1 To Len( aAux )
 		If ! ( Empty( aAux[X][1] ) )
@@ -501,8 +487,8 @@ Static Function AjustaParam
 		EndIf
 	Next X
 
-	Aadd(aParamBox,{6,"Diretorio"		,cDiretorio			,"@!"	,"StaticCall(GEFR022,VldDiretorio)","",50,.T.,"XML (*.XML) |*.XML","C:",GETF_NETWORKDRIVE+GETF_LOCALHARD+GETF_RETDIRECTORY } )
-	aAdd(aParamBox,{1,"Arquivo"			,PadR("RELTAB",50)	,"@!"	,"StaticCall(GEFR022,VldArquivo)" ,"","",50,.T.})
+	Aadd(aParamBox,{6,"Diretorio"		,MV_PAR01				,"@!"	,"StaticCall(GEFR022,VldDiretorio)","",50,.T.,"XML (*.XML) |*.XML","C:",GETF_NETWORKDRIVE+GETF_LOCALHARD+GETF_RETDIRECTORY } )
+	aAdd(aParamBox,{1,"Arquivo"			,PadR("RELTAB",50)	,"@!"	,"StaticCall(GEFR022,VldArquivo)"	,"","",50,.T.})
 
 	aAdd(aParamBox,{1,"Cliente"			,Space(GetSx3Cache("ZT1_CODCLI","X3_TAMANHO")),"@!","","SA1","",50,.T.})
 	aAdd(aParamBox,{1,"Loja"				,Space(GetSx3Cache("ZT1_LOJCLI","X3_TAMANHO")),"@!","","","",05,.T.})
